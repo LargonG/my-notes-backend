@@ -6,6 +6,7 @@ import java.util.UUID
 
 final case class File(
     id: FileId,
+    data: Seq[Byte],
 )
 
 object File {

@@ -1,4 +1,4 @@
-package org.kote.repository.ram
+package org.kote.repository.inmemory
 
 import cats.Monad
 import cats.data.OptionT
@@ -9,7 +9,7 @@ import org.kote.domain.user.User.UserId
 import org.kote.repository.UserRepository
 import org.kote.repository.UserRepository.UserUpdateCommand
 
-class RamUserRepository[F[_]: Monad](cache: Cache[F, UserId, User]) extends UserRepository[F] {
+class InMemoryUserRepository[F[_]: Monad](cache: Cache[F, UserId, User]) extends UserRepository[F] {
   override def create(user: User): F[Long] = cache.add(user.id, user).as(1L)
 
   override def list: F[List[User]] = cache.values

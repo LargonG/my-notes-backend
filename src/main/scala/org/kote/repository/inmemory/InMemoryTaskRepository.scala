@@ -1,4 +1,4 @@
-package org.kote.repository.ram
+package org.kote.repository.inmemory
 
 import cats.Monad
 import cats.data.OptionT
@@ -10,7 +10,7 @@ import org.kote.domain.task.Task.TaskId
 import org.kote.repository.TaskRepository
 import org.kote.repository.TaskRepository.TaskUpdateCommand
 
-class RamTaskRepository[F[_]: Monad: Clock](cache: Cache[F, TaskId, Task])
+class InMemoryTaskRepository[F[_]: Monad: Clock](cache: Cache[F, TaskId, Task])
     extends TaskRepository[F] {
   override def create(task: Task): F[Long] = cache.add(task.id, task).as(1L)
 

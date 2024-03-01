@@ -1,4 +1,4 @@
-package org.kote.repository.ram
+package org.kote.repository.inmemory
 
 import cats.Functor
 import cats.data.OptionT
@@ -8,7 +8,7 @@ import org.kote.domain.comment.Comment
 import org.kote.domain.comment.Comment.CommentId
 import org.kote.repository.CommentRepository
 
-class RamCommentRepository[F[_]: Functor](cache: Cache[F, CommentId, Comment])
+class InMemoryCommentRepository[F[_]: Functor](cache: Cache[F, CommentId, Comment])
     extends CommentRepository[F] {
 
   override def create(comment: Comment): F[Long] = cache.add(comment.id, comment).as(1L)

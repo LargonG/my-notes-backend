@@ -5,7 +5,7 @@ import cats.data.OptionT
 import cats.implicits.toFunctorOps
 import org.kote.common.cache.Cache
 
-package object ram {
+package object inmemory {
   private[repository] def cacheUpdateAndGet[F[_]: Monad, T, ID, CMD](
       id: ID,
       cmds: List[CMD],

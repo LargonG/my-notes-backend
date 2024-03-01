@@ -1,4 +1,4 @@
-package org.kote.repository.ram
+package org.kote.repository.inmemory
 
 import cats.Monad
 import cats.data.OptionT
@@ -9,7 +9,8 @@ import org.kote.domain.group.Group.GroupId
 import org.kote.repository.GroupRepository
 import org.kote.repository.GroupRepository.GroupUpdateCommand
 
-class RamGroupRepository[F[_]: Monad](cache: Cache[F, GroupId, Group]) extends GroupRepository[F] {
+class InMemoryGroupRepository[F[_]: Monad](cache: Cache[F, GroupId, Group])
+    extends GroupRepository[F] {
   override def create(group: Group): F[Long] = cache.add(group.id, group).as(1L)
 
   override def list: F[List[Group]] = cache.values

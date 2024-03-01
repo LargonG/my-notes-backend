@@ -1,4 +1,4 @@
-package org.kote.repository.ram
+package org.kote.repository.inmemory
 
 import cats.Monad
 import cats.data.OptionT
@@ -9,7 +9,8 @@ import org.kote.domain.board.Board.BoardId
 import org.kote.repository.BoardRepository
 import org.kote.repository.BoardRepository.BoardUpdateCommand
 
-class RamBoardRepository[F[_]: Monad](cache: Cache[F, BoardId, Board]) extends BoardRepository[F] {
+class InMemoryBoardRepository[F[_]: Monad](cache: Cache[F, BoardId, Board])
+    extends BoardRepository[F] {
 
   override def create(board: Board): F[Long] = cache.add(board.id, board).as(1L)
 

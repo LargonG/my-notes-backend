@@ -9,8 +9,14 @@ final case class Group(
     id: GroupId,
     title: String,
     tasks: List[TaskId],
-)
+) {
+  def toResponse: GroupResponse =
+    GroupResponse(id, title, tasks)
+}
 
 object Group {
-  final case class GroupId(inner: UUID) extends AnyVal
+  final case class GroupId private (inner: UUID) extends AnyVal
+
+  def fromCreateGroup(uuid: UUID, createGroup: CreateGroup): Group =
+    Group(GroupId(uuid), createGroup.title, createGroup.tasks)
 }

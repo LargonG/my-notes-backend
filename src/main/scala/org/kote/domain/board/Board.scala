@@ -11,8 +11,14 @@ final case class Board(
     title: String,
     owner: UserId,
     groups: List[GroupId],
-)
+) {
+  def toResponse: BoardResponse =
+    BoardResponse(id, title, owner, groups)
+}
 
 object Board {
-  final case class BoardId(inner: UUID) extends AnyVal
+  final case class BoardId private (inner: UUID) extends AnyVal
+
+  def fromCreateBoard(uuid: UUID, createBoard: CreateBoard): Board =
+    Board(BoardId(uuid), createBoard.title, createBoard.owner, List())
 }

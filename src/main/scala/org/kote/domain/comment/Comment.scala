@@ -12,8 +12,14 @@ final case class Comment(
     author: UserId,
     content: Content,
     createdAt: Instant,
-)
+) {
+  def toResponse: CommentResponse =
+    CommentResponse(id, author, content, createdAt)
+}
 
 object Comment {
-  final case class CommentId(inner: UUID) extends AnyVal
+  final case class CommentId private (inner: UUID) extends AnyVal
+
+  def fromCreateComment(uuid: UUID, date: Instant, createComment: CreateComment): Comment =
+    Comment(CommentId(uuid), createComment.author, createComment.content, date)
 }

@@ -17,9 +17,24 @@ final case class Task(
     comments: List[CommentId],
     createdAt: Instant,
     updatedAt: Instant,
-)
+) {
+  def toResponse: TaskResponse =
+    TaskResponse(id, title, assigns, status, content, comments, createdAt, updatedAt)
+}
 
 object Task {
   type Status = String
-  final case class TaskId(inner: UUID) extends AnyVal
+  final case class TaskId private (inner: UUID) extends AnyVal
+
+  def fromCreateTask(id: UUID, date: Instant, createTask: CreateTask): Task =
+    Task(
+      id = TaskId(id),
+      title = createTask.title,
+      assigns = List(),
+      status = "", // TODO: тут должно быть что-то поумнее
+      content = Content(List(), List()),
+      comments = List(),
+      createdAt = date,
+      updatedAt = date,
+    )
 }

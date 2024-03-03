@@ -82,7 +82,12 @@ object Cache {
       }.flatten.toEither))
 
     private def serialize(path: Path, charset: Charset, value: V): EitherT[F, Throwable, Unit] =
-      EitherT(Sync[F].delay(Using(Files.newBufferedWriter(path, charset)) { writer =>
+      EitherT(Sync[F].delay(Using {
+        if (Files.notExists(path.getParent)) {
+          Files.createDirectory(path.getParent)
+        }
+        Files.newBufferedWriter(path, charset)
+      } { writer =>
         writer.write(value.show)
       }.toEither))
   }

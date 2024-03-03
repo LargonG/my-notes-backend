@@ -15,7 +15,7 @@ class TaskController[F[_]](taskService: TaskService[F]) extends Controller[F] {
 
   private val createTask: ServerEndpoint[Any, F] =
     endpoint.post
-      .summary("Создать пользователя")
+      .summary("Создать задачу")
       .in(standardPath)
       .in(jsonBody[CreateTask])
       .out(jsonBody[TaskResponse])

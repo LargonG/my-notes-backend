@@ -1,8 +1,11 @@
 package org.kote.repository
 
+import cats.Monad
+import org.kote.common.cache.Cache
 import org.kote.domain.user.User
 import org.kote.domain.user.User.{NotionAccessToken, TrelloAccessToken, UserId, UserPassword}
 import org.kote.repository.UserRepository.UserUpdateCommand
+import org.kote.repository.inmemory.InMemoryUserRepository
 
 trait UserRepository[F[_]] extends UpdatableRepository[F, User, UserId, UserUpdateCommand] {}
 
@@ -13,4 +16,7 @@ object UserRepository {
   final case class UpdatePassword(password: UserPassword) extends UserUpdateCommand
   final case class UpdateTrelloAccessToken(token: TrelloAccessToken) extends UserUpdateCommand
   final case class UpdateNotionAccessToken(token: NotionAccessToken) extends UserUpdateCommand
+
+  def inMemory[F[_]: Monad](cache: Cache[F, UserId, User]): UserRepository[F] =
+    new InMemoryUserRepository[F](cache)
 }

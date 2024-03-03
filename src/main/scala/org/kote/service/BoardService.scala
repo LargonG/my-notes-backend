@@ -3,13 +3,13 @@ package org.kote.service
 import cats.FlatMap
 import cats.data.OptionT
 import cats.effect.std.UUIDGen
+import cats.syntax.flatMap._
+import cats.syntax.functor._
 import org.kote.domain.board.Board.BoardId
 import org.kote.domain.board.{Board, BoardResponse, CreateBoard}
 import org.kote.domain.user.User.UserId
 import org.kote.repository.BoardRepository
 import org.kote.repository.BoardRepository.BoardUpdateCommand
-import cats.syntax.flatMap._
-import cats.syntax.functor._
 
 trait BoardService[F[_]] {
   def create(
@@ -25,7 +25,14 @@ trait BoardService[F[_]] {
   def delete(id: BoardId): OptionT[F, BoardResponse]
 }
 
-final case class RepositoryBoardService[F[_]: UUIDGen: FlatMap](
+object BoardService {
+  def fromRepository[F[_]: UUIDGen: FlatMap](
+      boardRepository: BoardRepository[F],
+  ): BoardService[F] =
+    new RepositoryBoardService[F](boardRepository)
+}
+
+class RepositoryBoardService[F[_]: UUIDGen: FlatMap](
     boardRepository: BoardRepository[F],
 ) extends BoardService[F] {
   override def create(createBoard: CreateBoard): F[BoardResponse] =

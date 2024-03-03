@@ -1,8 +1,23 @@
 package org.kote.domain.user
 
-import org.kote.domain.user.User.UserPassword
+import sttp.tapir.Schema
+import tethys.derivation.semiauto.{jsonReader, jsonWriter}
+import tethys.{JsonReader, JsonWriter}
+
+import scala.annotation.nowarn
 
 final case class CreateUser(
     name: String,
-    password: UserPassword,
+    password: String,
 )
+
+object CreateUser {
+  @nowarn
+  implicit val createUserReader: JsonReader[CreateUser] = jsonReader
+
+  @nowarn
+  implicit val createUserWriter: JsonWriter[CreateUser] = jsonWriter
+
+  implicit val createUserSchema: Schema[CreateUser] =
+    Schema.derived.description("Запрос создания нового пользователя")
+}

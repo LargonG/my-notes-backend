@@ -1,8 +1,8 @@
 package org.kote.domain.content
 
-import org.kote.domain.content.File.FileId
+import org.kote.domain.content.file.File.FileId
 
 final case class Content(
-    text: List[String],
+    text: String,
     files: List[FileId],
 )

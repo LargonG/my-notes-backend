@@ -1,14 +1,31 @@
 package org.kote.domain.user
 
-import org.kote.domain.user.User.{NotionAccessToken, TrelloAccessToken, UserId, UserPassword}
+import org.kote.common.tethys.TethysInstances
+import org.kote.domain.user.User.{NotionAccessToken, TrelloAccessToken}
+import sttp.tapir.Schema
+import tethys.derivation.semiauto.{jsonReader, jsonWriter}
+import tethys.{JsonReader, JsonWriter}
 
 import java.time.Instant
+import java.util.UUID
+import scala.annotation.nowarn
 
 final case class UserResponse(
-    id: UserId,
+    id: UUID,
     name: String,
     registeredIn: Instant,
 )
+
+object UserResponse extends TethysInstances {
+  @nowarn
+  implicit val userResponseReader: JsonReader[UserResponse] = jsonReader
+
+  @nowarn
+  implicit val userResponseWriter: JsonWriter[UserResponse] = jsonWriter
+
+  implicit val userResponseSchema: Schema[UserResponse] =
+    Schema.derived.description("Общие данные о пользователе")
+}
 
 /** Небезопасный класс, его не следует возвращать любому пользователю, иначе может произойти утечка
   * данных
@@ -26,10 +43,21 @@ final case class UserResponse(
   *   когда зарегистрирован
   */
 final case class UnsafeUserResponse(
-    id: UserId,
+    id: UUID,
     notion: Option[NotionAccessToken],
     trello: Option[TrelloAccessToken],
     name: String,
-    password: UserPassword,
+    password: String,
     registeredIn: Instant,
 )
+
+object UnsafeUserResponse extends TethysInstances {
+  @nowarn
+  implicit val unsafeUserResponseReader: JsonReader[UnsafeUserResponse] = jsonReader
+
+  @nowarn
+  implicit val unsafeUserResponseWriter: JsonWriter[UnsafeUserResponse] = jsonWriter
+
+  implicit val unsafeUserResponseSchema: Schema[UnsafeUserResponse] =
+    Schema.derived.description("Подробные данные о пользователе")
+}

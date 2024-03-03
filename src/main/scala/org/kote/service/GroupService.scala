@@ -16,14 +16,21 @@ trait GroupService[F[_]] {
 
   def get(id: GroupId): OptionT[F, GroupResponse]
 
-  def moveTask(from: GroupId, to: GroupId, what: TaskId): OptionT[F, Unit]
+  def moveTask(from: GroupId, to: GroupId, what: TaskId): OptionT[F, String]
 
   def update(id: GroupId, cmds: List[GroupUpdateCommand]): OptionT[F, GroupResponse]
 
   def delete(id: GroupId): OptionT[F, GroupResponse]
 }
 
-final case class RepositoryGroupService[F[_]: UUIDGen: Monad](
+object GroupService {
+  def fromRepository[F[_]: UUIDGen: Monad](
+      groupRepository: GroupRepository[F],
+  ): GroupService[F] =
+    new RepositoryGroupService[F](groupRepository)
+}
+
+class RepositoryGroupService[F[_]: UUIDGen: Monad](
     groupRepository: GroupRepository[F],
 ) extends GroupService[F] {
   override def create(createGroup: CreateGroup): F[GroupResponse] =
@@ -31,20 +38,21 @@ final case class RepositoryGroupService[F[_]: UUIDGen: Monad](
       uuid <- UUIDGen[F].randomUUID
       group = Group.fromCreateGroup(uuid, createGroup)
       _ <- groupRepository.create(group)
+      // todo: update board
     } yield group.toResponse
 
   override def get(id: GroupId): OptionT[F, GroupResponse] =
     groupRepository.get(id).map(_.toResponse)
 
-  override def moveTask(from: GroupId, to: GroupId, what: TaskId): OptionT[F, Unit] =
+  override def moveTask(from: GroupId, to: GroupId, what: TaskId): OptionT[F, String] =
     for {
       _ <- groupRepository.update(from, GroupRepository.RemoveTask(what))
       _ <- groupRepository.update(to, GroupRepository.AddTask(what))
-    } yield ()
+    } yield "moved"
 
   override def update(id: GroupId, cmds: List[GroupUpdateCommand]): OptionT[F, GroupResponse] =
     groupRepository.update(id, cmds).map(_.toResponse)
 
   override def delete(id: GroupId): OptionT[F, GroupResponse] =
-    groupRepository.delete(id).map(_.toResponse)
+    groupRepository.delete(id).map(_.toResponse) // todo: update board
 }

@@ -42,7 +42,7 @@ object Cache {
       Sync[F].delay(map.update(key, value))
   }
 
-  private class OnDisk[F[_]: Sync, K: FileName, V: Show: Parser[Throwable, *]](
+  private class OnDisk[F[_]: Sync, K: FileName, V: Show: Parser[Throwable, K, *]](
       directory: String,
       charset: Charset,
       map: concurrent.Map[K, Path],
@@ -55,18 +55,18 @@ object Cache {
       } yield res
 
     override def values: F[List[V]] =
-      map.values.toList.traverse(path => parse(path).rethrowT)
+      map.toSeq.toList.traverse { case (key, path) => parse(key, path).rethrowT }
 
     override def get(key: K): F[Option[V]] =
       (for {
         path <- OptionT(Sync[F].delay(map.get(key)))
-        res <- parse(path).toOption
+        res <- parse(key, path).toOption
       } yield res).value
 
     override def remove(key: K): F[Option[V]] =
       (for {
         path <- OptionT(Sync[F].delay(map.get(key)))
-        res <- parse(path).toOption
+        res <- parse(key, path).toOption
         _ <- OptionT(Sync[F].delay(Option(Files.delete(path))))
       } yield res).value
 
@@ -76,9 +76,9 @@ object Cache {
         res <- OptionT.liftF(serialize(path, charset, value).rethrowT)
       } yield res).value.as(())
 
-    private def parse(path: Path): EitherT[F, Throwable, V] =
+    private def parse(key: K, path: Path): EitherT[F, Throwable, V] =
       EitherT(Sync[F].delay(Using(Source.fromFile(path.toFile)) { source =>
-        Parser[Throwable, V].parse(source.getLines().to(LazyList)).toTry
+        Parser[Throwable, K, V].parse(source.getLines().to(LazyList)).apply(key).toTry
       }.flatten.toEither))
 
     private def serialize(path: Path, charset: Charset, value: V): EitherT[F, Throwable, Unit] =
@@ -91,7 +91,7 @@ object Cache {
   def ram[F[_]: Sync, K, V]: F[Cache[F, K, V]] =
     Sync[F].delay(new InMemory[F, K, V](new TrieMap[K, V]))
 
-  def disk[F[_]: Sync, K: FileName, V: Show: Parser[Throwable, *]](
+  def disk[F[_]: Sync, K: FileName, V: Show: Parser[Throwable, K, *]](
       directory: String,
       charset: Charset,
   ): F[Cache[F, K, V]] =

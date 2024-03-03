@@ -4,8 +4,8 @@ import cats.Functor
 import cats.data.OptionT
 import cats.implicits.toFunctorOps
 import org.kote.common.cache.Cache
-import org.kote.domain.content.File
-import org.kote.domain.content.File.FileId
+import org.kote.domain.content.file.File
+import org.kote.domain.content.file.File.FileId
 import org.kote.repository.FileRepository
 
 class InMemoryFileRepository[F[_]: Functor](cache: Cache[F, FileId, File])

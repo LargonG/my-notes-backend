@@ -1,9 +1,11 @@
 package org.kote.common.parser
 
-trait Parser[E, T] {
-  def parse(input: LazyList[String]): Either[E, T]
+import cats.data.Reader
+
+trait Parser[E, K, T] {
+  def parse(input: LazyList[String]): Reader[K, Either[E, T]]
 }
 
 object Parser {
-  def apply[E, T: Parser[E, *]]: Parser[E, T] = implicitly
+  def apply[E, K, T: Parser[E, K, *]]: Parser[E, K, T] = implicitly
 }

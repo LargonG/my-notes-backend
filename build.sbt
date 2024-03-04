@@ -12,6 +12,9 @@ val tapirVersion = "1.7.6"
 val http4sVersion = "0.23.23"
 val logbackVersion = "1.4.11"
 val tethysVersion = "0.26.0"
+val enumeratumVersion = "1.7.2"
+
+val circeVersion = "0.14.1"
 
 lazy val root = (project in file("."))
   .settings(
@@ -32,10 +35,20 @@ lazy val root = (project in file("."))
       // logback
       "ch.qos.logback" % "logback-classic" % logbackVersion,
 
-      // tethys
+      // tethys (json)
       "com.tethys-json" %% "tethys-core" % tethysVersion,
       "com.tethys-json" %% "tethys-jackson" % tethysVersion,
       "com.tethys-json" %% "tethys-derivation" % tethysVersion,
+      "com.tethys-json" %% "tethys-enumeratum" % tethysVersion,
+      "com.tethys-json" %% "tethys-circe" % tethysVersion,
+
+      // enumeratum
+      "com.beachape" %% "enumeratum" % enumeratumVersion,
+
+      // circe
+      "io.circe" %% "circe-core" % circeVersion,
+      "io.circe" %% "circe-generic" % circeVersion,
+      "io.circe" %% "circe-parser" % circeVersion,
 
       // tests
       "com.softwaremill.sttp.tapir" %% "tapir-sttp-stub-server" % tapirVersion % Test,

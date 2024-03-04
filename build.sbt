@@ -4,17 +4,22 @@ ThisBuild / scalaVersion := "2.13.12"
 
 val catsVersion = "2.9.0"
 val catsEffect3 = "3.4.8"
+val catsBackendVersion = "3.8.13"
+
+val sttpClientVersion = "3.9.0"
+val tapirVersion = "1.7.6"
+val http4sVersion = "0.23.23"
+
+val logbackVersion = "1.4.11"
+
+val tethysVersion = "0.26.0"
+val circeVersion = "0.14.1"
+
+val enumeratumVersion = "1.7.2"
+
 val scalatestVersion = "3.2.15"
 val scalamockVersion = "5.2.0"
 val kindProjectorVersion = "0.13.2"
-
-val tapirVersion = "1.7.6"
-val http4sVersion = "0.23.23"
-val logbackVersion = "1.4.11"
-val tethysVersion = "0.26.0"
-val enumeratumVersion = "1.7.2"
-
-val circeVersion = "0.14.1"
 
 lazy val root = (project in file("."))
   .settings(
@@ -28,6 +33,11 @@ lazy val root = (project in file("."))
       "com.softwaremill.sttp.tapir" %% "tapir-http4s-server" % tapirVersion,
       "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion,
       "com.softwaremill.sttp.tapir" %% "tapir-json-tethys" % tapirVersion,
+
+      // client
+      "com.softwaremill.sttp.client3" %% "core" % sttpClientVersion,
+      "com.softwaremill.sttp.client3" %% "circe" % sttpClientVersion,
+      "com.softwaremill.sttp.client3" %% "async-http-client-backend-cats" % catsBackendVersion,
 
       // http4s
       "org.http4s" %% "http4s-ember-server" % http4sVersion,

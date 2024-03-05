@@ -6,7 +6,7 @@ import org.kote.client.notion
 import org.kote.client.notion.configuration.NotionConfiguration
 import org.kote.client.notion.model.list.PaginatedList
 import org.kote.client.notion.model.user.{UserId, UserResponse}
-import sttp.client3.{Empty, RequestT, SttpBackend, UriContext, basicRequest}
+import sttp.client3.{SttpBackend, UriContext}
 
 trait NotionUserClient[F[_]] {
   def list: F[List[UserResponse]]

@@ -1,11 +1,11 @@
 package org.kote.client.notion.model.database
 
+import io.circe.{Decoder, Encoder}
 import org.kote.client.notion.model.page.PageId
 import org.kote.client.notion.model.text.RichText
 import org.kote.client.notion.model.user.UserResponse
 
 import java.util.UUID
-import scala.collection.immutable.SortedSet
 
 /** Уменьшенная версия notion объекта Database
   * @param id
@@ -29,6 +29,14 @@ final case class DbResponse(
 )
 // Может потребоваться parent
 
+object DbResponse {
+  implicit val dbResponseDecoder: Decoder[DbResponse] =
+    Decoder.forProduct5[DbResponse, DbId, UserResponse, List[RichText], Map[
+      String,
+      DbPropertyResponse,
+    ], Boolean]("id", "created_by", "title", "properties", "achieved")(DbResponse.apply)
+}
+
 /** Запрос создания новой базы данных
   * @param parent
   *   Notion page - куда будет прикреплён (родитель)
@@ -41,12 +49,24 @@ final case class DbResponse(
 final case class DbRequest(
     parent: PageId,
     title: Option[List[RichText]],
-    properties: SortedSet[DbPropertyRequest],
+    properties: Map[String, DbPropertyRequest],
 )
+
+object DbRequest {
+  implicit val dbRequestEncoder: Encoder[DbRequest] =
+    Encoder.forProduct3("parent", "title", "properties") { source =>
+      (source.parent, source.title, source.properties)
+    }
+}
 
 final case class DbUpdateRequest(
     title: Option[List[RichText]],
-    properties: SortedSet[DbPropertyRequest],
+    properties: Map[String, DbPropertyRequest],
 )
 
 final case class DbId(inner: UUID) extends AnyVal
+
+object DbId {
+  implicit val dbIdEncoder: Encoder[DbId] = Encoder.encodeUUID.contramap(_.inner)
+  implicit val dbIdDecoder: Decoder[DbId] = Decoder.decodeUUID.map(DbId(_))
+}

@@ -1,5 +1,6 @@
 package org.kote.client.notion.model.page
 
+import io.circe.{Decoder, Encoder}
 import org.kote.client.notion.model.block.BlockRequest
 import org.kote.client.notion.model.parent.DatabaseParent
 import org.kote.client.notion.model.user.UserResponse
@@ -30,3 +31,8 @@ case class PageRequest(
 )
 
 final case class PageId(inner: UUID) extends AnyVal
+
+object PageId {
+  implicit val pageIdEncoder: Encoder[PageId] = Encoder.encodeUUID.contramap(_.inner)
+  implicit val pageIdDecoder: Decoder[PageId] = Decoder.decodeUUID.map(PageId(_))
+}

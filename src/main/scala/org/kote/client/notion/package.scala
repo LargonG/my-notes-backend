@@ -1,9 +1,10 @@
 package org.kote.client
 
-import cats.ApplicativeThrow
+import cats.implicits.toFunctorOps
+import cats.{Applicative, ApplicativeThrow}
 import io.circe.Decoder
 import org.kote.client.notion.configuration.NotionConfiguration
-import sttp.client3.{Empty, RequestT, ResponseAs, basicRequest}
+import sttp.client3.{Empty, RequestT, Response, ResponseAs, basicRequest}
 import sttp.client3.circe.asJsonAlways
 
 package object notion {
@@ -19,4 +20,11 @@ package object notion {
       .header("Authorization", s"Bearer ${config.apiKey}")
       .header("Notion-Version", config.notionVersion)
       .header("Content-Type", "application/json")
+
+  def optionIfNowSuccess[F[_]: Applicative, T](response: Response[F[T]]): F[Option[T]] =
+    if (response.code.isSuccess) {
+      response.body.map(Option(_))
+    } else {
+      Applicative[F].pure(Option.empty[T])
+    }
 }

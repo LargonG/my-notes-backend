@@ -1,16 +1,62 @@
 package org.kote.client.notion.model.database
 
-import org.kote.client.notion.model.database.DbPropertySelectRequest.SelectOption
+import io.circe.generic.semiauto.deriveEncoder
+import io.circe.syntax.EncoderOps
+import io.circe.{Encoder, Json}
+import org.kote.client.notion.model.database.DbPropertyRequest.singleEncoder
+import org.kote.client.notion.model.database.DbSelectPropertyRequest.SelectOption
 
 /** Запрос на создание свойства определённого типа */
 sealed trait DbPropertyRequest
 
-case object DbPropertyFilesRequest extends DbPropertyRequest
-case object DbPropertyPeopleRequest extends DbPropertyRequest
-case object DbPropertyRichTextRequest extends DbPropertyRequest
-case object DbPropertyTitleRequest extends DbPropertyRequest
-final case class DbPropertySelectRequest(options: List[SelectOption]) extends DbPropertyRequest
+object DbPropertyRequest {
+  def singleEncoder[T <: DbPropertyRequest](name: String, json: Json = Json.obj()): Encoder[T] =
+    Encoder.instance { _ =>
+      Json.obj(
+        name -> json,
+      )
+    }
 
-object DbPropertySelectRequest {
+  implicit val dbPropertyRequestEncoder: Encoder[DbPropertyRequest] = Encoder.instance {
+    case DbFilesPropertyRequest              => DbFilesPropertyRequest.asJson
+    case DbPeoplePropertyRequest             => DbPeoplePropertyRequest.asJson
+    case DbRichTextPropertyRequest           => DbRichTextPropertyRequest.asJson
+    case DbTitlePropertyRequest              => DbTitlePropertyRequest.asJson
+    case select @ DbSelectPropertyRequest(_) => select.asJson
+  }
+}
+
+case object DbFilesPropertyRequest extends DbPropertyRequest {
+  implicit val dbFilesPropertyRequestEncoder: Encoder[DbFilesPropertyRequest.type] =
+    singleEncoder("title")
+}
+case object DbPeoplePropertyRequest extends DbPropertyRequest {
+  implicit val dbPeoplePropertyRequestEncoder: Encoder[DbPeoplePropertyRequest.type] =
+    singleEncoder("people")
+}
+case object DbRichTextPropertyRequest extends DbPropertyRequest {
+  implicit val dbRichTextPropertyRequest: Encoder[DbRichTextPropertyRequest.type] =
+    singleEncoder("rich_text")
+}
+case object DbTitlePropertyRequest extends DbPropertyRequest {
+  implicit val dbTitlePropertyRequestEncoder: Encoder[DbTitlePropertyRequest.type] =
+    singleEncoder("title")
+}
+final case class DbSelectPropertyRequest(options: List[SelectOption]) extends DbPropertyRequest
+
+object DbSelectPropertyRequest {
   final case class SelectOption(name: String)
+  object SelectOption {
+    implicit val selectOptionEncoder: Encoder[SelectOption] = deriveEncoder
+  }
+
+  implicit val dbSelectPropertyRequestEncoder: Encoder[DbSelectPropertyRequest] =
+    Encoder.instance { value =>
+      Json.obj(
+        "select" -> Json.obj(
+          "options" -> value.options.asJson,
+        ),
+      )
+    }
+
 }

@@ -1,12 +1,12 @@
 package org.kote.client.notion.model.page
 
-import org.kote.client.notion.model.file.File
+import org.kote.client.notion.model.file.FileHeader
 import org.kote.client.notion.model.text.RichText
 import org.kote.client.notion.model.user.UserRequest
 
 sealed trait PagePropertyRequest
 
-final case class PageFilesPropertyRequest(files: List[File]) extends PagePropertyRequest
+final case class PageFilesPropertyRequest(files: List[FileHeader]) extends PagePropertyRequest
 
 final case class PagePeoplePropertyRequest(people: List[UserRequest]) extends PagePropertyRequest
 

@@ -5,6 +5,8 @@ import cats.effect.kernel.Async
 import cats.implicits.{toFlatMapOps, toFunctorOps}
 import org.kote.client.notion.configuration.NotionConfiguration
 import org.kote.client.notion.model.database.{DbId, DbRequest, DbResponse}
+import org.kote.client.notion.model.list.PaginatedList
+import org.kote.client.notion.model.list.PaginatedList.Cursor
 import org.kote.client.notion.model.page.PageResponse
 import sttp.client3.circe._
 import sttp.client3.{SttpBackend, UriContext}
@@ -84,5 +86,38 @@ final class NotionDatabaseHttpClient[F[_]: Async](
     *   Список всех страниц, любой длины, если существует база данных с таким id и мы имеем к ней
     *   доступ
     */
-  override def list(id: DbId): OptionT[F, List[PageResponse]] = ???
+  override def list(id: DbId): OptionT[F, List[PageResponse]] = {
+    def tick(cursor: Option[Cursor]): OptionT[F, PaginatedList[PageResponse]] =
+      OptionT(
+        basicRequestWithHeaders
+          .post(uri"$database/$id/query")
+          .body(cursor)
+          .response(unwrap[F, PaginatedList[PageResponse]])
+          .readTimeout(config.timeout)
+          .send(sttpBackend)
+          .map(optionIfNowSuccess(_))
+          .flatten,
+      )
+
+    def loop(
+        acc: List[List[PageResponse]],
+        cursor: Option[Cursor],
+    ): OptionT[F, List[List[PageResponse]]] =
+      tick(cursor)
+        .flatMap { value =>
+          if (value.hasMore && value.nextCursor.isDefined)
+            loop(
+              value.results :: acc,
+              value.nextCursor.map(Cursor(_)),
+            )
+          // можем свалиться в бесконечный цикл, если notion будет возвращать какую-то дичь,
+          // но ведь такого не будет?.. так что пофиг
+          else OptionT.pure[F]((value.results :: acc).reverse)
+        }
+        .orElse(
+          if (acc.isEmpty) OptionT.none[F, List[List[PageResponse]]] else OptionT.pure[F](acc),
+        ) // в случае неудачи вернём хоть что-то, если что-то было
+
+    loop(List(), None).map(_.flatten)
+  }
 }

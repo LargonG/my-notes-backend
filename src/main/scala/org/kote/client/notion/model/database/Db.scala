@@ -31,10 +31,7 @@ final case class DbResponse(
 
 object DbResponse {
   implicit val dbResponseDecoder: Decoder[DbResponse] =
-    Decoder.forProduct5[DbResponse, DbId, UserResponse, List[RichText], Map[
-      String,
-      DbPropertyResponse,
-    ], Boolean]("id", "created_by", "title", "properties", "achieved")(DbResponse.apply)
+    Decoder.forProduct5("id", "created_by", "title", "properties", "achieved")(DbResponse.apply)
 }
 
 /** Запрос создания новой базы данных

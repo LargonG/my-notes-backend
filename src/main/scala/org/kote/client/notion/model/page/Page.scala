@@ -16,6 +16,11 @@ final case class PageResponse(
     parent: DatabaseParent,
 )
 
+object PageResponse {
+  implicit val pageResponseDecoder: Decoder[PageResponse] =
+    Decoder.forProduct5("id", "created_by", "achieved", "properties", "parent")(PageResponse.apply)
+}
+
 /** Запрос создания страницы прикреплённой к какой-то базе данных
   * @param parent
   *   база данных

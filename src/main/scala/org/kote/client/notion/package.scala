@@ -18,4 +18,5 @@ package object notion {
     basicRequest
       .header("Authorization", s"Bearer ${config.apiKey}")
       .header("Notion-Version", config.notionVersion)
+      .header("Content-Type", "application/json")
 }

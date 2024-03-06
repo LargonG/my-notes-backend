@@ -29,6 +29,7 @@ final class NotionPageHttpClient[F[_]: Async](
     implicit val config: NotionConfiguration,
 ) extends NotionPageClient[F] {
   private val pages = s"${config.url}/$v1/pages"
+
   override def create(request: PageRequest): F[PageResponse] =
     basicRequestWithHeaders
       .post(uri"$pages")

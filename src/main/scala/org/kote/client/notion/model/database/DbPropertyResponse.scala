@@ -4,6 +4,15 @@ import io.circe.Decoder
 import io.circe.generic.semiauto.deriveDecoder
 import org.kote.client.notion.model.database.DbSelectPropertyResponse.SelectOption
 import org.kote.client.notion.model.database.DbStatusPropertyResponse.StatusOption
+import org.kote.client.notion.model.property.{
+  FilesType,
+  PeopleType,
+  PropertyType,
+  RichTextType,
+  SelectType,
+  StatusType,
+  TitleType,
+}
 
 /** Общие поля для всех типов свойств базы данных
   * @param id
@@ -25,26 +34,20 @@ object DbPropertyResponse {
       for {
         id <- cursor.get[String]("id")
         name <- cursor.get[String]("name")
-        valueType <- cursor.get[String]("type")
+        valueType <- cursor.get[PropertyType]("type")
         value <- valueType match {
-          case "files"     => cursor.get[DbFilesPropertyResponse.type](valueType)
-          case "people"    => cursor.get[DbPeoplePropertyResponse.type](valueType)
-          case "rich_text" => cursor.get[DbRichTextPropertyResponse.type](valueType)
-          case "status"    => cursor.get[DbStatusPropertyResponse](valueType)
-          case "title"     => cursor.get[DbTitlePropertyResponse.type](valueType)
-          case "select"    => cursor.get[DbSelectPropertyResponse](valueType)
-          case _           => cursor.get[DbUnsupportedPropertyResponse.type](valueType)
+          case FilesType    => cursor.get[DbFilesPropertyResponse.type](valueType)
+          case PeopleType   => cursor.get[DbPeoplePropertyResponse.type](valueType)
+          case RichTextType => cursor.get[DbRichTextPropertyResponse.type](valueType)
+          case StatusType   => cursor.get[DbStatusPropertyResponse](valueType)
+          case TitleType    => cursor.get[DbTitlePropertyResponse.type](valueType)
+          case SelectType   => cursor.get[DbSelectPropertyResponse](valueType)
         }
       } yield DbPropertyResponse(id, name, value)
     }
 }
 
 sealed trait DbPropertyValueResponse
-
-case object DbUnsupportedPropertyResponse extends DbPropertyValueResponse {
-  implicit val dbUnsupportedPropertyResponseDecoder: Decoder[DbUnsupportedPropertyResponse.type] =
-    deriveDecoder
-}
 
 /** Колонка хранения файлов */
 case object DbFilesPropertyResponse extends DbPropertyValueResponse {

@@ -1,12 +1,22 @@
 package org.kote.client.notion.model.list
 
 import io.circe.{Decoder, Encoder}
-import io.circe.generic.codec.DerivedAsObjectCodec.deriveCodec
 
+/** Иногда notion api возвращает объект типа "list", представляющий из себя фрагмент. Внутри этого
+  * объекта хранится информацию о том, как нам достать следующий фрагмент
+  * @param results
+  *   интересующие объекты
+  * @param nextCursor
+  *   указатель на следующий фрагмент, обычно устанавливается в QUERY PARAMS, либо в BODY PARAMS
+  * @param hasMore
+  *   есть ли ещё фрагменты после данного
+  * @tparam T
+  *   может быть любой тип Response из notion.model
+  */
 case class PaginatedList[T](
-    hasMore: Boolean,
-    nextCursor: Option[String],
     results: List[T],
+    nextCursor: Option[String],
+    hasMore: Boolean,
 )
 
 object PaginatedList {
@@ -18,8 +28,8 @@ object PaginatedList {
   }
 
   implicit def paginatedListDecoder[T: Decoder]: Decoder[PaginatedList[T]] =
-    Decoder.forProduct3("has_more", "next_cursor", "results") {
-      (hasMore: Boolean, nextCursor: String, results: List[T]) =>
-        PaginatedList(hasMore, Option(nextCursor), results)
+    Decoder.forProduct3("results", "next_cursor", "has_more") {
+      (results: List[T], nextCursor: Option[String], hasMore: Boolean) =>
+        PaginatedList(results, nextCursor, hasMore)
     }
 }

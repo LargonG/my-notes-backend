@@ -35,6 +35,25 @@ case class PageRequest(
     children: List[BlockRequest],
 )
 
+object PageRequest {
+  implicit val pageRequestEncoder: Encoder[PageRequest] =
+    Encoder.forProduct3("parent", "properties", "children") { source =>
+      (source.parent, source.properties, source.children)
+    }
+}
+
+case class PageUpdateRequest(
+    properties: Map[String, PagePropertyRequest],
+    achieved: Boolean,
+)
+
+object PageUpdateRequest {
+  implicit val pageUpdateRequestEncoder: Encoder[PageUpdateRequest] = {
+    import io.circe.generic.semiauto.deriveEncoder
+    deriveEncoder
+  }
+}
+
 final case class PageId(inner: UUID) extends AnyVal
 
 object PageId {

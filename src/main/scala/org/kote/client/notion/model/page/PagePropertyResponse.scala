@@ -3,6 +3,15 @@ package org.kote.client.notion.model.page
 import io.circe.Decoder
 import io.circe.generic.semiauto.deriveDecoder
 import org.kote.client.notion.model.file.FileHeader
+import org.kote.client.notion.model.property.{
+  FilesType,
+  PeopleType,
+  PropertyType,
+  RichTextType,
+  SelectType,
+  StatusType,
+  TitleType,
+}
 import org.kote.client.notion.model.text.RichText
 import org.kote.client.notion.model.user.UserResponse
 
@@ -22,15 +31,14 @@ object PagePropertyResponse {
     cursor =>
       for {
         id <- cursor.get[String]("id")
-        valueType <- cursor.get[String]("type")
-        value <- valueType match {
-          case "files"     => cursor.get[PageFilesPropertyResponse](valueType)
-          case "people"    => cursor.get[PagePeoplePropertyResponse](valueType)
-          case "rich_text" => cursor.get[PageRichTextPropertyResponse](valueType)
-          case "status"    => cursor.get[PageStatusPropertyResponse](valueType)
-          case "title"     => cursor.get[PageTitlePropertyResponse](valueType)
-          case "select"    => cursor.get[PageSelectPropertyResponse](valueType)
-          case _           => cursor.get[PageUnsupportedPropertyResponse.type](valueType)
+        propertyType <- cursor.get[PropertyType]("type")
+        value <- propertyType match {
+          case FilesType    => cursor.get[PageFilesPropertyResponse](propertyType)
+          case PeopleType   => cursor.get[PagePeoplePropertyResponse](propertyType)
+          case RichTextType => cursor.get[PageRichTextPropertyResponse](propertyType)
+          case StatusType   => cursor.get[PageStatusPropertyResponse](propertyType)
+          case TitleType    => cursor.get[PageTitlePropertyResponse](propertyType)
+          case SelectType   => cursor.get[PageSelectPropertyResponse](propertyType)
         }
       } yield PagePropertyResponse(id, value)
   }
@@ -39,12 +47,6 @@ object PagePropertyResponse {
 // Можно было, кстати, сделать enum, ну да ладно
 
 sealed trait PagePropertyResponseValue
-
-case object PageUnsupportedPropertyResponse extends PagePropertyResponseValue {
-  implicit val pageUnsupportedPropertyResponseDecoder
-      : Decoder[PageUnsupportedPropertyResponse.type] =
-    deriveDecoder
-}
 
 final case class PageFilesPropertyResponse(files: List[FileHeader])
     extends PagePropertyResponseValue

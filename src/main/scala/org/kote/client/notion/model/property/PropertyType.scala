@@ -3,7 +3,7 @@ package org.kote.client.notion.model.property
 import cats.implicits.toFunctorOps
 import io.circe.syntax.EncoderOps
 import io.circe.{Decoder, Encoder}
-import org.kote.client.notion.model.property.PropertyType.{decodeString, encodeString}
+import org.kote.client.notion.{decodeType, encodeType}
 
 /** Может быть: "rich_text", "select", "status", "title", "people", "files"
   */
@@ -12,15 +12,6 @@ sealed trait PropertyType {
 }
 
 object PropertyType {
-  def encodeString[T](value: String): Encoder[T] =
-    Encoder.encodeString.contramap(_ => value)
-
-  def decodeString[T](expected: String, constructor: String => T): Decoder[T] =
-    Decoder.decodeString.emap(actual =>
-      if (actual == expected) Right(constructor(actual))
-      else Left("Unsupported property type"),
-    )
-
   implicit def asString(me: PropertyType): String = me.value
 
   implicit val encoder: Encoder[PropertyType] =
@@ -47,58 +38,58 @@ case object RichTextType extends PropertyType {
   override val value = "rich_text"
 
   implicit val encoder: Encoder[RichTextType.type] =
-    encodeString(value)
+    encodeType(value)
 
   implicit val decoder: Decoder[RichTextType.type] =
-    decodeString(value, _ => RichTextType)
+    decodeType(value, _ => RichTextType)
 }
 
 case object SelectType extends PropertyType {
   override val value: String = "select"
 
   implicit val encoder: Encoder[SelectType.type] =
-    encodeString(value)
+    encodeType(value)
 
   implicit val decoder: Decoder[SelectType.type] =
-    decodeString(value, _ => SelectType)
+    decodeType(value, _ => SelectType)
 }
 
 case object StatusType extends PropertyType {
   override val value: String = "status"
 
   implicit val encoder: Encoder[StatusType.type] =
-    encodeString(value)
+    encodeType(value)
 
   implicit val decoder: Decoder[StatusType.type] =
-    decodeString(value, _ => StatusType)
+    decodeType(value, _ => StatusType)
 }
 
 case object TitleType extends PropertyType {
   override val value: String = "title"
 
   implicit val encoder: Encoder[TitleType.type] =
-    encodeString(value)
+    encodeType(value)
 
   implicit val decoder: Decoder[TitleType.type] =
-    decodeString(value, _ => TitleType)
+    decodeType(value, _ => TitleType)
 }
 
 case object PeopleType extends PropertyType {
   override val value: String = "people"
 
   implicit val encoder: Encoder[PeopleType.type] =
-    encodeString(value)
+    encodeType(value)
 
   implicit val decoder: Decoder[PeopleType.type] =
-    decodeString(value, _ => PeopleType)
+    decodeType(value, _ => PeopleType)
 }
 
 case object FilesType extends PropertyType {
   override val value = "files"
 
   implicit val encoder: Encoder[FilesType.type] =
-    encodeString(value)
+    encodeType(value)
 
   implicit val decoder: Decoder[FilesType.type] =
-    decodeString(value, _ => FilesType)
+    decodeType(value, _ => FilesType)
 }

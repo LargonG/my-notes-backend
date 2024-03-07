@@ -46,7 +46,7 @@ final class NotionPageHttpClient[F[_]: Async](
         .response(unwrap[F, PageResponse])
         .readTimeout(config.timeout)
         .send(sttpBackend)
-        .flatMap(optionIfNowSuccess(_)),
+        .flatMap(optionIfSuccess(_)),
     )
 
   // todo: оно пока что возвращает paginated list, а мы с ним в проекте не хотим работать,
@@ -58,7 +58,7 @@ final class NotionPageHttpClient[F[_]: Async](
         .response(unwrap[F, PropertyItem])
         .readTimeout(config.timeout)
         .send(sttpBackend)
-        .flatMap(optionIfNowSuccess(_)),
+        .flatMap(optionIfSuccess(_)),
     )
 
   override def updateProperty(
@@ -72,7 +72,7 @@ final class NotionPageHttpClient[F[_]: Async](
         .response(unwrap[F, PageResponse])
         .readTimeout(config.timeout)
         .send(sttpBackend)
-        .flatMap(optionIfNowSuccess(_)),
+        .flatMap(optionIfSuccess(_)),
     )
 
   override def achieve(pageId: PageId): OptionT[F, PageResponse] =

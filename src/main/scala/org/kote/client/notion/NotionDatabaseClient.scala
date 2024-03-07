@@ -74,7 +74,7 @@ final class NotionDatabaseHttpClient[F[_]: Async](
         .response(unwrap[F, DbResponse])
         .readTimeout(config.timeout)
         .send(sttpBackend)
-        .map(optionIfNowSuccess(_))
+        .map(optionIfSuccess(_))
         .flatten,
     )
 
@@ -95,29 +95,10 @@ final class NotionDatabaseHttpClient[F[_]: Async](
           .response(unwrap[F, PaginatedList[PageResponse]])
           .readTimeout(config.timeout)
           .send(sttpBackend)
-          .map(optionIfNowSuccess(_))
+          .map(optionIfSuccess(_))
           .flatten,
       )
 
-    def loop(
-        acc: List[List[PageResponse]],
-        cursor: Option[Cursor],
-    ): OptionT[F, List[List[PageResponse]]] =
-      tick(cursor)
-        .flatMap { value =>
-          if (value.hasMore && value.nextCursor.isDefined)
-            loop(
-              value.results :: acc,
-              value.nextCursor.map(Cursor(_)),
-            )
-          // можем свалиться в бесконечный цикл, если notion будет возвращать какую-то дичь,
-          // но ведь такого не будет?.. так что пофиг
-          else OptionT.pure[F]((value.results :: acc).reverse)
-        }
-        .orElse(
-          if (acc.isEmpty) OptionT.none[F, List[List[PageResponse]]] else OptionT.pure[F](acc),
-        ) // в случае неудачи вернём хоть что-то, если что-то было
-
-    loop(List(), None).map(_.flatten)
+    concatPaginatedLists(tick)
   }
 }

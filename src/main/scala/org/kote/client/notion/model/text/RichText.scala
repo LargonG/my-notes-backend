@@ -2,7 +2,7 @@ package org.kote.client.notion.model.text
 
 import cats.implicits.toFunctorOps
 import io.circe.syntax.EncoderOps
-import io.circe.{Decoder, Encoder}
+import io.circe.{Decoder, Encoder, Json}
 
 sealed trait RichText
 
@@ -21,9 +21,15 @@ final case class Text(
 ) extends RichText
 
 object Text {
-  implicit val textEncoder: Encoder[Text] = Encoder.forProduct2("type", "plain_text") { source =>
-    ("text", source.plainText)
-  }
+  implicit val textEncoder: Encoder[Text] =
+    Encoder.instance { source =>
+      Json.obj(
+        "type" -> "text".asJson,
+        "text" -> Json.obj(
+          "content" -> source.plainText.asJson,
+        ),
+      )
+    }
 
   implicit val textDecoder: Decoder[Text] =
     Decoder.instance(_.get[String]("plain_text")).map(Text(_))

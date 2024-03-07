@@ -1,9 +1,11 @@
 package org.kote.client.notion.model.list
 
 import io.circe.{Decoder, Encoder}
+import org.kote.client.notion.utils.Query
 
 /** Иногда notion api возвращает объект типа "list", представляющий из себя фрагмент. Внутри этого
   * объекта хранится информацию о том, как нам достать следующий фрагмент
+ *
   * @param results
   *   интересующие объекты
   * @param nextCursor
@@ -21,10 +23,14 @@ case class PaginatedList[T](
 
 object PaginatedList {
   final case class Cursor(value: String, pageSize: Int = 32)
+
   object Cursor {
     implicit val cursorEncoder: Encoder[Cursor] = Encoder.forProduct2("start_cursor", "page_size") {
       cursor => (cursor.value, cursor.pageSize)
     }
+
+    implicit val cursorQuery: Query[Cursor] = (cursor: Cursor) =>
+      s"start_cursor=${cursor.value}&page_size=${cursor.pageSize}"
   }
 
   implicit def paginatedListDecoder[T: Decoder]: Decoder[PaginatedList[T]] =

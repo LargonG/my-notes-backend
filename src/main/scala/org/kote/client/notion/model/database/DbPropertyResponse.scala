@@ -4,15 +4,7 @@ import io.circe.Decoder
 import io.circe.generic.semiauto.deriveDecoder
 import org.kote.client.notion.model.database.DbSelectPropertyResponse.SelectOption
 import org.kote.client.notion.model.database.DbStatusPropertyResponse.StatusOption
-import org.kote.client.notion.model.property.{
-  FilesType,
-  PeopleType,
-  PropertyType,
-  RichTextType,
-  SelectType,
-  StatusType,
-  TitleType,
-}
+import org.kote.client.notion.model.property._
 
 /** Общие поля для всех типов свойств базы данных
   * @param id

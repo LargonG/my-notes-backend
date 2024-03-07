@@ -67,7 +67,7 @@ final class NotionPageHttpClient[F[_]: Async](
   ): OptionT[F, PageResponse] =
     OptionT(
       basicRequestWithHeaders
-        .patch(uri"$pages/$pageId/")
+        .patch(uri"$pages/$pageId")
         .body(request)
         .response(unwrap[F, PageResponse])
         .readTimeout(config.timeout)

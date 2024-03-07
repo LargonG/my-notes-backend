@@ -12,7 +12,7 @@ class PropertyItemSpec extends AnyFlatSpec with Matchers with EitherValues {
 
     val res = decode[Option[String]](json)
 
-    res.isRight shouldBe true : Unit
+    res.isRight shouldBe true: Unit
     res.getOrElse(Some("hello")) shouldBe None
   }
 

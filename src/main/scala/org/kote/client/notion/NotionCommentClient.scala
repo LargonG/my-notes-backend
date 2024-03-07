@@ -21,7 +21,7 @@ final class NotionCommentHttpClient[F[_]: Async](
     sttpBackend: SttpBackend[F, Any],
     implicit val config: NotionConfiguration,
 ) extends NotionCommentClient[F] {
-  private val comments = s"${config.url}/$v1"
+  private val comments = s"${config.url}/$v1/comments"
 
   override def create(request: CommentRequest): OptionT[F, CommentResponse] =
     OptionT(

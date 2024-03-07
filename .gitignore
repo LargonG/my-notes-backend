@@ -1,6 +1,9 @@
 # idea
 .idea/
 
+# visual studio code
+.vscode/
+
 # sbt
 .bsp/
 target/

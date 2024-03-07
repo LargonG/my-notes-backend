@@ -28,7 +28,7 @@ final class NotionUserHttpClient[F[_]: Async](
     def tick(cursor: Option[Cursor]): OptionT[F, PaginatedList[UserResponse]] =
       OptionT(
         basicRequestWithHeaders
-          .get(if (cursor.isEmpty) uri"$users" else uri"$users?start_cursor=$cursor")
+          .get(uri"$users?$cursor")
           .response(notion.unwrap[F, PaginatedList[UserResponse]])
           .readTimeout(config.timeout)
           .send(sttpBackend)

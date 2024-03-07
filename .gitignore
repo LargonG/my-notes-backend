@@ -1,4 +1,12 @@
-.bsp/
+# idea
 .idea/
+
+# sbt
+.bsp/
 target/
 project/target
+
+# custom
+files/
+
+todo.*

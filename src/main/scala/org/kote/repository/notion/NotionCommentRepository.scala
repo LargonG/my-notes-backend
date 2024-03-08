@@ -6,12 +6,10 @@ import cats.implicits.catsSyntaxApplicativeId
 import cats.syntax.functor._
 import org.kote.adapter.Adapter
 import org.kote.adapter.Adapter.{FromAdapter, ToAdapter}
-import org.kote.client.notion
-import org.kote.client.notion.NotionCommentClient
+import org.kote.client.notion._
 import org.kote.domain.comment.Comment
 import org.kote.domain.comment.Comment.CommentId
 import org.kote.repository.CommentRepository
-import org.kote.repository.notion.NotionCommentRepository._
 
 case class NotionCommentRepository[F[_]: Monad](client: NotionCommentClient[F])(implicit
     val commentAdapter: Adapter[Comment, NotionCommentRequest, NotionCommentResponse],
@@ -31,11 +29,4 @@ case class NotionCommentRepository[F[_]: Monad](client: NotionCommentClient[F])(
     .map(_.fromResponse)).flatTransform(_.flatten.pure)
 
   override def delete(id: CommentId): OptionT[F, Comment] = get(id)
-}
-
-object NotionCommentRepository {
-  private type NotionPageId = notion.model.page.PageId
-  private type NotionCommentId = notion.model.comment.CommentId
-  private type NotionCommentRequest = notion.model.comment.CommentRequest
-  private type NotionCommentResponse = notion.model.comment.CommentResponse
 }

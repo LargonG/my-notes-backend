@@ -112,6 +112,6 @@ final class NotionDatabaseHttpClient[F[_]: Async](
         .response(unwrap[F, DbResponse])
         .readTimeout(config.timeout)
         .send(sttpBackend)
-        .flatMap(optionIfSuccess(_))
+        .flatMap(optionIfSuccess(_)),
     )
 }

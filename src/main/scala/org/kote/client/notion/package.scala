@@ -11,6 +11,14 @@ import sttp.client3.circe.asJsonAlways
 import sttp.client3.{Empty, RequestT, Response, ResponseAs, basicRequest}
 
 package object notion {
+  type NotionPageId = model.page.PageId
+  type NotionCommentId = model.comment.CommentId
+  type NotionCommentRequest = model.comment.CommentRequest
+  type NotionCommentResponse = model.comment.CommentResponse
+  type NotionUserRequest = model.user.UserRequest
+  type NotionUserResponse = model.user.UserResponse
+  type NotionUserId = model.user.UserId
+
   val v1 = "api/v1"
 
   def unwrap[F[_]: ApplicativeThrow, T: Decoder]: ResponseAs[F[T], Any] =

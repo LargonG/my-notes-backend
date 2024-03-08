@@ -43,5 +43,3 @@ case class NotionGroupRepository[F[_]: Monad](
       cmds: List[GroupUpdateCommand],
   ): OptionT[F, Group] = ???
 }
-
-object NotionGroupRepository {}

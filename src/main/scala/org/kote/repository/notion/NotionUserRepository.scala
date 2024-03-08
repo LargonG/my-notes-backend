@@ -5,12 +5,15 @@ import cats.data.OptionT
 import cats.implicits.toFunctorOps
 import org.kote.adapter.Adapter
 import org.kote.adapter.Adapter.{FromAdapterF, ToAdapter}
-import org.kote.client.notion
-import org.kote.client.notion.NotionUserClient
+import org.kote.client.notion.{
+  NotionUserClient,
+  NotionUserId,
+  NotionUserRequest,
+  NotionUserResponse,
+}
 import org.kote.domain.user.User
 import org.kote.domain.user.User.UserId
 import org.kote.repository.UserRepository
-import org.kote.repository.notion.NotionUserRepository._
 
 class NotionUserRepository[F[_]: Functor](client: NotionUserClient[F])(implicit
     val userAdapter: Adapter[User, NotionUserRequest, NotionUserResponse],
@@ -44,10 +47,4 @@ class NotionUserRepository[F[_]: Functor](client: NotionUserClient[F])(implicit
       id: User.UserId,
       cmds: List[UserRepository.UserUpdateCommand],
   ): OptionT[F, User] = ??? // auth
-}
-
-object NotionUserRepository {
-  private type NotionUserRequest = notion.model.user.UserRequest
-  private type NotionUserResponse = notion.model.user.UserResponse
-  private type NotionUserId = notion.model.user.UserId
 }

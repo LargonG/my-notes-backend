@@ -61,6 +61,13 @@ final case class DbUpdateRequest(
     properties: Map[String, DbPropertyRequest],
 )
 
+object DbUpdateRequest {
+  implicit val dbUpdateRequestEncoder: Encoder[DbUpdateRequest] =
+    Encoder.forProduct2("title", "properties") { source =>
+      (source.title, source.properties)
+    }
+}
+
 final case class DbId(inner: UUID) extends AnyVal
 
 object DbId {

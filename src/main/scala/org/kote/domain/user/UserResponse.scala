@@ -1,7 +1,6 @@
 package org.kote.domain.user
 
 import org.kote.common.tethys.TethysInstances
-import org.kote.domain.user.User.{NotionAccessToken, TrelloAccessToken}
 import sttp.tapir.Schema
 import tethys.derivation.semiauto.{jsonReader, jsonWriter}
 import tethys.{JsonReader, JsonWriter}
@@ -31,10 +30,6 @@ object UserResponse extends TethysInstances {
   * данных
   * @param id
   *   пользователя
-  * @param notion
-  *   access token !!! небезопасно
-  * @param trello
-  *   access token !!! небезопасно
   * @param name
   *   логин
   * @param password
@@ -44,8 +39,6 @@ object UserResponse extends TethysInstances {
   */
 final case class UnsafeUserResponse(
     id: UUID,
-    notion: Option[NotionAccessToken],
-    trello: Option[TrelloAccessToken],
     name: String,
     password: String,
     registeredIn: Instant,

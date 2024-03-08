@@ -4,7 +4,7 @@ import cats.data.OptionT
 import cats.effect.kernel.Async
 import cats.implicits.{toFlatMapOps, toFunctorOps}
 import org.kote.client.notion.configuration.NotionConfiguration
-import org.kote.client.notion.model.database.{DbId, DbRequest, DbResponse}
+import org.kote.client.notion.model.database.{DbId, DbRequest, DbResponse, DbUpdateRequest}
 import org.kote.client.notion.model.list.PaginatedList
 import org.kote.client.notion.model.list.PaginatedList.Cursor
 import org.kote.client.notion.model.page.PageResponse
@@ -37,13 +37,15 @@ trait NotionDatabaseClient[F[_]] {
     *   доступ
     */
   def list(id: DbId): OptionT[F, List[PageResponse]]
+
+  def update(id: DbId, request: DbUpdateRequest): OptionT[F, DbResponse]
 }
 
 final class NotionDatabaseHttpClient[F[_]: Async](
     sttpBackend: SttpBackend[F, Any],
     implicit val config: NotionConfiguration,
 ) extends NotionDatabaseClient[F] {
-  private val database = s"${config.url}/$v1/databases"
+  private val databases = s"${config.url}/$v1/databases"
 
   /** Создаёт новую базу данных в notion "Create" endpoint в notion api
     * @param request
@@ -53,7 +55,7 @@ final class NotionDatabaseHttpClient[F[_]: Async](
     */
   override def create(request: DbRequest): F[DbResponse] =
     basicRequestWithHeaders
-      .post(uri"$database")
+      .post(uri"$databases")
       .body(request)
       .response(unwrap[F, DbResponse])
       .readTimeout(config.timeout)
@@ -70,7 +72,7 @@ final class NotionDatabaseHttpClient[F[_]: Async](
   override def get(id: DbId): OptionT[F, DbResponse] =
     OptionT(
       basicRequestWithHeaders
-        .get(uri"$database/$id")
+        .get(uri"$databases/$id")
         .response(unwrap[F, DbResponse])
         .readTimeout(config.timeout)
         .send(sttpBackend)
@@ -90,7 +92,7 @@ final class NotionDatabaseHttpClient[F[_]: Async](
     def tick(cursor: Option[Cursor]): OptionT[F, PaginatedList[PageResponse]] =
       OptionT(
         basicRequestWithHeaders
-          .post(uri"$database/$id/query")
+          .post(uri"$databases/$id/query")
           .body(cursor)
           .response(unwrap[F, PaginatedList[PageResponse]])
           .readTimeout(config.timeout)
@@ -101,4 +103,15 @@ final class NotionDatabaseHttpClient[F[_]: Async](
 
     concatPaginatedLists(tick)
   }
+
+  override def update(id: DbId, request: DbUpdateRequest): OptionT[F, DbResponse] =
+    OptionT(
+      basicRequestWithHeaders
+        .patch(uri"$databases/$id")
+        .body(request)
+        .response(unwrap[F, DbResponse])
+        .readTimeout(config.timeout)
+        .send(sttpBackend)
+        .flatMap(optionIfSuccess(_))
+    )
 }

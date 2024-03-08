@@ -24,10 +24,6 @@ class InMemoryUserRepository[F[_]: Monad](cache: Cache[F, UserId, User]) extends
         user.copy(name = name)
       case UserRepository.UpdatePassword(password) =>
         user.copy(password = password)
-      case UserRepository.UpdateTrelloAccessToken(token) =>
-        user.copy(trello = Some(token))
-      case UserRepository.UpdateNotionAccessToken(token) =>
-        user.copy(notion = Some(token))
     }
 
     cacheUpdateAndGet(id, cmds, loop, get, cache)

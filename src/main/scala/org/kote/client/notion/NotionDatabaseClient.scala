@@ -4,7 +4,13 @@ import cats.data.OptionT
 import cats.effect.kernel.Async
 import cats.implicits.{toFlatMapOps, toFunctorOps}
 import org.kote.client.notion.configuration.NotionConfiguration
-import org.kote.client.notion.model.database.{DbId, DbRequest, DbResponse, DbUpdateRequest}
+import org.kote.client.notion.model.database.{
+  DbId,
+  DbRequest,
+  DbResponse,
+  DbSearchRequest,
+  DbUpdateRequest,
+}
 import org.kote.client.notion.model.list.PaginatedList
 import org.kote.client.notion.model.list.PaginatedList.Cursor
 import org.kote.client.notion.model.page.PageResponse
@@ -20,6 +26,8 @@ trait NotionDatabaseClient[F[_]] {
     *   ответ сервера notion, только что созданная база данных
     */
   def create(request: NotionDatabaseCreateRequest): F[NotionDatabaseResponse]
+
+  def search(request: NotionDatabaseSearchRequest): F[List[NotionDatabaseResponse]]
 
   /** Получает уже существующую базу данных из notion, её характеристику
     * @param id
@@ -48,7 +56,8 @@ final class NotionDatabaseHttpClient[F[_]: Async](
     sttpBackend: SttpBackend[F, Any],
     implicit val config: NotionConfiguration,
 ) extends NotionDatabaseClient[F] {
-  private val databases = s"${config.url}/$v1/databases"
+  private val baseUrl = s"${config.url}/$v1"
+  private val databases = s"$baseUrl/databases"
 
   /** Создаёт новую базу данных в notion "Create" endpoint в notion api
     * @param request
@@ -82,6 +91,21 @@ final class NotionDatabaseHttpClient[F[_]: Async](
         .map(optionIfSuccess(_))
         .flatten,
     )
+
+  override def search(request: DbSearchRequest): F[List[DbResponse]] = {
+    def tick(cursor: Option[Cursor]): OptionT[F, PaginatedList[DbResponse]] =
+      OptionT(
+        basicRequestWithHeaders
+          .post(uri"$baseUrl/search")
+          .body(request.copy(cursor = cursor))
+          .response(unwrap[F, PaginatedList[DbResponse]])
+          .readTimeout(config.timeout)
+          .send(sttpBackend)
+          .flatMap(optionIfSuccess(_)),
+      )
+
+    concatPaginatedLists(tick).getOrElse(List())
+  }
 
   /** Список всех страниц, относящихся к базе данных (т.е. у которых parent выставлен на id) "Query"
     * endpoint в notion api (может быть вызван несколько раз)
@@ -117,4 +141,5 @@ final class NotionDatabaseHttpClient[F[_]: Async](
         .send(sttpBackend)
         .flatMap(optionIfSuccess(_)),
     )
+
 }

@@ -20,6 +20,7 @@ package object notion {
 
   type NotionDatabaseCreateRequest = model.database.DbRequest
   type NotionDatabasePropertiesUpdateRequest = model.database.DbUpdateRequest
+  type NotionDatabaseSearchRequest = model.database.DbSearchRequest
 
   type NotionDatabasePropertiesUpdateResponse = model.database.DbResponse
   type NotionDatabaseResponse = model.database.DbResponse
@@ -29,24 +30,30 @@ package object notion {
 
   type NotionPageCreateRequest = model.page.PageRequest
   type NotionPagePropertiesUpdateRequest = model.page.PageUpdateRequest
+  type NotionPageSearchRequest = model.page.PageSearchRequest
 
   type NotionPagePropertyItemResponse = model.property.PropertyItem
   type NotionPageResponse = model.page.PageResponse
+
   // Block //
   type NotionBlockId = model.block.BlockId
   type NotionBlockRequest = model.block.BlockRequest
   type NotionBlockResponse = model.block.BlockResponse
+
   // Comment //
   type NotionCommentId = model.comment.CommentId
   type NotionCommentCreateRequest = model.comment.CommentRequest
+
   // File //
   type NotionFileHeader = model.file.FileHeader
   type NotionCommentResponse = model.comment.CommentResponse
   type NotionInternalFile = model.file.NotionFile
   type NotionExternalFile = model.file.ExternalFile
+
   // Text //
   type NotionRichText = model.text.RichText
   type NotionText = model.text.Text
+
   // User //
   type NotionUserId = model.user.UserId
 

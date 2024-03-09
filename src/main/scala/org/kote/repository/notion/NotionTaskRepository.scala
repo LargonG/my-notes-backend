@@ -5,12 +5,13 @@ import cats.data.OptionT
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import org.kote.adapter.Adapter
-import org.kote.adapter.Adapter.{FromAdapter, ToAdapter}
+import org.kote.adapter.Adapter.{FromAdapter, FromAdapterF, ToAdapter}
 import org.kote.client.notion._
-import org.kote.client.notion.model.page.NotionPageFullResponse
+import org.kote.client.notion.model.page.{NotionPageFullResponse, PageSearchRequest}
 import org.kote.domain.task.Task
 import org.kote.domain.task.Task.TaskId
 import org.kote.repository.TaskRepository
+import cats.implicits.toTraverseOps
 
 class NotionTaskRepository[F[_]: Monad](
     pageClient: NotionPageClient[F],
@@ -28,8 +29,17 @@ class NotionTaskRepository[F[_]: Monad](
         .map(opt => opt.getOrElse(List()))
     } yield NotionPageFullResponse(pageResponse, blockResponse).fromResponse).as(1L)
 
-  // вот зачем оно мне?
-  override def list: F[List[Task]] = ???
+  override def list: F[List[Task]] =
+    pageClient
+      .search(PageSearchRequest(None, None))
+      .map(_.traverse { response =>
+        blockClient
+          .getContent(response.id)
+          .getOrElse(List())
+          .map(res => NotionPageFullResponse(response, res))
+          .fromResponse
+      })
+      .flatten
 
   override def get(id: TaskId): OptionT[F, Task] =
     for {

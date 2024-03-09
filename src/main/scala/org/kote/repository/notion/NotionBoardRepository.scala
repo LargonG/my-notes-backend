@@ -4,7 +4,8 @@ import cats.Applicative
 import cats.data.OptionT
 import cats.syntax.functor._
 import org.kote.adapter.Adapter
-import org.kote.adapter.Adapter.{FromAdapter, ToAdapter}
+import org.kote.adapter.Adapter.{FromAdapter, FromAdapterF, ToAdapter}
+import org.kote.client.notion.model.database.DbSearchRequest
 import org.kote.client.notion.{
   NotionDatabaseClient,
   NotionDatabaseCreateRequest,
@@ -27,7 +28,8 @@ case class NotionBoardRepository[F[_]: Applicative](
     } yield response.fromResponse).as(1L)
 
   // нет
-  override def list: F[List[Board]] = ???
+  override def list: F[List[Board]] =
+    client.search(DbSearchRequest(None, None)).map(_.fromResponse)
 
   override def get(id: BoardId): OptionT[F, Board] =
     for {

@@ -1,13 +1,16 @@
 package org.kote.repository
 
 import cats.Monad
+import cats.data.OptionT
 import cats.effect.kernel.Clock
 import org.kote.adapter.Adapter
 import org.kote.client.notion._
 import org.kote.client.notion.model.page.NotionPageFullResponse
 import org.kote.common.cache.Cache
+import org.kote.domain.board.Board.BoardId
 import org.kote.domain.comment.Comment.CommentId
 import org.kote.domain.content.Content
+import org.kote.domain.group.Group.GroupId
 import org.kote.domain.task.Task
 import org.kote.domain.task.Task.{Status, TaskId}
 import org.kote.domain.user.User.UserId
@@ -19,7 +22,13 @@ import org.kote.repository.notion.NotionTaskRepository
   * @tparam F
   *   side-effects
   */
-trait TaskRepository[F[_]] extends UpdatableRepository[F, Task, TaskId, TaskUpdateCommand]
+trait TaskRepository[F[_]] extends UpdatableRepository[F, Task, TaskId, TaskUpdateCommand] {
+  def all: F[List[Task]]
+
+  def listByGroup(groupId: GroupId): OptionT[F, List[Task]]
+
+  def listByBoard(boardId: BoardId): OptionT[F, List[Task]]
+}
 
 object TaskRepository {
   sealed trait TaskUpdateCommand extends UpdateCommand

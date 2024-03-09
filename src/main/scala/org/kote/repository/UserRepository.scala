@@ -15,7 +15,9 @@ import org.kote.repository.UserRepository.UserUpdateCommand
 import org.kote.repository.inmemory.InMemoryUserRepository
 import org.kote.repository.notion.NotionUserRepository
 
-trait UserRepository[F[_]] extends UpdatableRepository[F, User, UserId, UserUpdateCommand] {}
+trait UserRepository[F[_]] extends UpdatableRepository[F, User, UserId, UserUpdateCommand] {
+  def all: F[List[User]]
+}
 
 object UserRepository {
   sealed trait UserUpdateCommand extends UpdateCommand

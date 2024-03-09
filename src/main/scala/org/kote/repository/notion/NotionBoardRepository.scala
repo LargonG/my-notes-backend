@@ -14,6 +14,7 @@ import org.kote.client.notion.{
 }
 import org.kote.domain.board.Board
 import org.kote.domain.board.Board.BoardId
+import org.kote.domain.user.User
 import org.kote.repository.BoardRepository
 
 case class NotionBoardRepository[F[_]: Applicative](
@@ -25,27 +26,36 @@ case class NotionBoardRepository[F[_]: Applicative](
   override def create(obj: Board): F[Long] =
     (for {
       response <- client.create(obj.toRequest)
-    } yield response.fromResponse).as(1L)
+    } yield response.fromResponse).as(1L).getOrElse(0L)
 
-  // нет
-  override def list: F[List[Board]] =
-    client.search(DbSearchRequest(None, None)).map(_.fromResponse)
+  override def all: F[List[Board]] =
+    client
+      .search(DbSearchRequest(None, None))
+      .map(_.fromResponse)
+      .getOrElse(List())
+
+  override def list(userId: User.UserId): OptionT[F, List[Board]] =
+    client
+      .search(DbSearchRequest(None, None))
+      .map(_.fromResponse)
+      .map(_.filter(_.owner == userId))
 
   override def get(id: BoardId): OptionT[F, Board] =
     for {
       response <- client.get(id.toRequest)
     } yield response.fromResponse
 
-  /** Notion api не позволяет удалить базу данных, поэтому тут ничего не происходит
+  /** Notion api не позволяет удалить базу данных, поэтому просто получим таблицу и всё
     * @param id
     *   таблицы
     * @return
-    *   None
+    *   вызывает [[get]]
     */
-  override def delete(id: BoardId): OptionT[F, Board] = OptionT.none[F, Board]
+  override def delete(id: BoardId): OptionT[F, Board] = get(id)
 
   override def update(
       id: Board.BoardId,
       cmds: List[BoardRepository.BoardUpdateCommand],
   ): OptionT[F, Board] = ???
+
 }

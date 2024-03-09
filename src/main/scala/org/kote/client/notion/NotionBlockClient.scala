@@ -12,18 +12,79 @@ import org.kote.client.notion.utils.Query.ToQuery
 import sttp.client3.circe._
 import sttp.client3.{SttpBackend, UriContext}
 
+/** Клиент обработки блоков: создание/удаление/получение/обновление.
+  *
+  * Придерживается соглашения, описанного в [[org.kote.client.notion]]
+  *
+  * ==Соглашение о возвращаемых значениях==
+  *
+  * Все классы в данном пакете придерживаются следующего соглашения:
+  *
+  * Все методы придерживаются следующей структуры (может быть несколько аргументов):
+  * {{{
+  *   def methodName(request: Request): OptionT[F, Response]
+  * }}}
+  * ===returns:===
+  *
+  * None - на сервере произошла ошибка.
+  *
+  * Some - ответ
+  *
+  * F - кидает ошибку, если запрос не смог выполнится из-за неправильно введённых в него данных,
+  * проблемы с доступом или такого ресурса больше не существует.
+  */
 trait NotionBlockClient[F[_]] {
+
+  /** Добавляет новых детей к странице. Дети - блоки.
+    * @param pageId
+    *   страницы
+    * @param children
+    *   запрос-список запросов добавления потомков-блоков
+    * @return
+    *   Неполный список всех детей первого уровня страницы. Подробнее см. [[NotionBlockClient]]
+    */
   def append(
       pageId: NotionPageId,
       children: List[NotionBlockRequest],
   ): OptionT[F, PaginatedList[NotionBlockResponse]]
 
+  /** Делает запрос notion на получение информации о блоке, его содержимом.
+    * @param id
+    *   блока
+    * @return
+    *   Вся информация о блоке. Подробнее см. [[NotionBlockClient]]
+    */
   def get(id: NotionBlockId): OptionT[F, NotionBlockResponse]
 
+  /** Весь поверхностный контент страницы - дети-блоки первого поколения от этой страницы.
+    * @param id
+    *   страницы
+    * @return
+    *   Весь контент первого уровня страницы. Подробнее см. [[NotionBlockClient]]
+    */
   def getContent(id: NotionPageId): OptionT[F, List[NotionBlockResponse]]
 
-  def update(id: NotionBlockId, request: NotionBlockRequest): OptionT[F, NotionBlockResponse]
+  /** Обновляет контент существующего блока по его id.
+    *
+    * Может полностью поменять его структуру, что не указываем - не меняет.
+    * @param id
+    *   блока
+    * @param request
+    *   запрос изменения блока (не отличается от создания)
+    * @return
+    *   Обновлённый блок. Подробнее см. [[NotionBlockClient]]
+    */
+  def update(
+      id: NotionBlockId,
+      request: NotionBlockRequest,
+  ): OptionT[F, NotionBlockResponse]
 
+  /** Удаляет блок.
+    * @param id
+    *   блока
+    * @return
+    *   Удалённый блок. Подробнее см. [[NotionBlockClient]]
+    */
   def delete(id: NotionBlockId): OptionT[F, NotionBlockResponse]
 }
 

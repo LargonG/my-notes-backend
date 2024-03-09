@@ -4,7 +4,7 @@ import cats.Functor
 import cats.data.OptionT
 import cats.implicits.toFunctorOps
 import org.kote.adapter.Adapter
-import org.kote.adapter.Adapter.{FromAdapterF, ToAdapter}
+import org.kote.adapter.Adapter.{FromAdapter, FromAdapterF, ToAdapter}
 import org.kote.client.notion.{
   NotionUserClient,
   NotionUserId,
@@ -24,27 +24,38 @@ class NotionUserRepository[F[_]: Functor](client: NotionUserClient[F])(implicit
     * @param obj
     * @return
     */
-  override def create(obj: User): F[Long] = ??? // auth
+  // todo: auth, можно, если public api
+  override def create(obj: User): F[Long] = get(obj.id).as(1L).getOrElse(0L)
 
-  override def list: F[List[User]] = for {
+  override def all: F[List[User]] = (for {
     response <- client.list
-  } yield response.fromResponse
+  } yield response.fromResponse).getOrElse(List())
 
   override def get(id: UserId): OptionT[F, User] =
-    OptionT(for {
+    for {
       response <- client.get(id.toRequest)
-    } yield response.fromResponse)
+    } yield response.fromResponse
 
-  /** Удаляет связку user id -> notion user id
+  /** В notion нельзя удалять пользователей, поэтому просто получаем пользователя.
     * @param id
+    *   пользователя (внутреннее)
     * @return
+    *   информация о notion аккаунте удалённого пользователя
     */
-  override def delete(id: UserId): OptionT[F, User] = ??? // auth
+  // todo: auth, наверное
+  override def delete(id: UserId): OptionT[F, User] = get(id)
 
-  /** Может обновить связку user id -> notion user id
+  /** Notion не позволяет ничего обновлять у пользователя, так что получаем пользователя и
+    * возвращаем его.
+    * @param id
+    *   объекта
+    * @param cmds
+    *   команды установки новых значений
+    * @return
+    *   объект после изменений, если он существовал
     */
   override def update(
       id: User.UserId,
       cmds: List[UserRepository.UserUpdateCommand],
-  ): OptionT[F, User] = ??? // auth
+  ): OptionT[F, User] = get(id)
 }

@@ -43,7 +43,7 @@ class RepositoryBoardService[F[_]: UUIDGen: FlatMap](
     } yield board.toResponse
 
   override def list(user: UserId): F[List[BoardResponse]] =
-    boardRepository.list.map(_.map(_.toResponse))
+    boardRepository.list(user).map(_.map(_.toResponse)).getOrElse(List())
 
   override def get(id: BoardId): OptionT[F, BoardResponse] =
     boardRepository.get(id).map(_.toResponse)

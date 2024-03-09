@@ -3,6 +3,7 @@ package org.kote.domain.comment
 import org.kote.common.tethys.TethysInstances
 import org.kote.domain.comment.Comment.CommentId
 import org.kote.domain.content.Content
+import org.kote.domain.task.Task.TaskId
 import org.kote.domain.user.User.UserId
 import sttp.tapir.Schema
 import tethys.{JsonReader, JsonWriter}
@@ -12,6 +13,7 @@ import java.util.UUID
 
 final case class Comment(
     id: CommentId,
+    parent: TaskId,
     author: UserId,
     content: Content,
     createdAt: Instant,
@@ -24,6 +26,7 @@ object Comment {
   def fromCreateComment(uuid: UUID, date: Instant, createComment: CreateComment): Comment =
     Comment(
       CommentId(uuid),
+      createComment.parent,
       createComment.author,
       Content(createComment.text, createComment.files),
       date,

@@ -10,11 +10,27 @@ import org.kote.client.notion.model.list.PaginatedList.Cursor
 import sttp.client3.circe.asJsonAlways
 import sttp.client3.{Empty, RequestT, Response, ResponseAs, basicRequest}
 
+/** Пакет предоставляющий клиентов для работы с notion api.
+  *
+  * Реализованы только те части, которые используются основным приложением
+  *
+  * ==Соглашение о возвращаемых значениях==
+  * Все классы в данном пакете придерживаются следующего соглашения:
+  *
+  * Все методы придерживаются следующей структуры (может быть несколько аргументов):
+  * {{{
+  *   def methodName(request: Request): OptionT[F, Response]
+  * }}}
+  * ===returns:===
+  *
+  * [[None]] - на сервере произошла ошибка.
+  *
+  * [[Some]] - ответ
+  *
+  * F - кидает ошибку, если запрос не смог выполнится из-за неправильно введённых в него данных,
+  * проблемы с доступом или такого ресурса больше не существует.
+  */
 package object notion {
-
-  /** Типы для внешнего использования
-    */
-
   // Database //
   type NotionDatabaseId = model.database.DbId
 
@@ -57,23 +73,19 @@ package object notion {
   // User //
   type NotionUserId = model.user.UserId
 
-  /** Объединяет поля properties у page и children blocks
-    *
-    * @param info
-    *   properties
-    * @param blocks
-    *   children
-    */
-
   type NotionUserRequest = model.user.UserRequest
   type NotionUserResponse = model.user.UserResponse
 
-  val v1 = "api/v1"
+  ////////////////
+  // Версии api //
+  ////////////////
 
-  def unwrap[F[_]: ApplicativeThrow, T: Decoder]: ResponseAs[F[T], Any] =
+  private[notion] val v1 = "api/v1"
+
+  private[notion] def unwrap[F[_]: ApplicativeThrow, T: Decoder]: ResponseAs[F[T], Any] =
     asJsonAlways[T].map(ApplicativeThrow[F].fromEither(_))
 
-  def basicRequestWithHeaders(implicit
+  private[notion] def basicRequestWithHeaders(implicit
       config: NotionConfiguration,
   ): RequestT[Empty, Either[String, String], Any] =
     basicRequest
@@ -81,23 +93,29 @@ package object notion {
       .header("Notion-Version", config.notionVersion)
       .contentType("application/json")
 
-  def optionIfSuccess[F[_]: Applicative, T](response: Response[F[T]]): F[Option[T]] =
+  private[notion] def optionIfSuccess[F[_]: ApplicativeThrow, T](
+      response: Response[F[T]],
+  ): F[Option[T]] =
     if (response.isSuccess) {
       response.body.map(Option(_))
-    } else {
+    } else if (response.isServerError) {
       Applicative[F].pure(Option.empty[T])
+    } else if (response.isClientError) {
+      ApplicativeThrow[F].raiseError(new IllegalArgumentException())
+    } else {
+      ApplicativeThrow[F].raiseError(new IllegalStateException())
     }
 
-  def encodeType[T](value: String): Encoder[T] =
+  private[notion] def encodeType[T](value: String): Encoder[T] =
     Encoder.encodeString.contramap(_ => value)
 
-  def decodeType[T](expected: String, constructor: String => T): Decoder[T] =
+  private[notion] def decodeType[T](expected: String, constructor: String => T): Decoder[T] =
     Decoder.decodeString.emap(actual =>
       if (actual == expected) Right(constructor(actual))
       else Left("Unsupported type"),
     )
 
-  def concatPaginatedLists[F[_]: Monad, T](
+  private[notion] def concatPaginatedLists[F[_]: Monad, T](
       tick: Option[Cursor] => OptionT[F, PaginatedList[T]],
   ): OptionT[F, List[T]] = {
     def loop(

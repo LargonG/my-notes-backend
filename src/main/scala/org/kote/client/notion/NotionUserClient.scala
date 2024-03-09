@@ -11,11 +11,11 @@ import org.kote.client.notion.model.user.{UserId, UserResponse}
 import sttp.client3.{SttpBackend, UriContext}
 
 trait NotionUserClient[F[_]] {
-  def list: F[List[NotionUserResponse]]
+  def list: OptionT[F, List[NotionUserResponse]]
 
-  def get(id: NotionUserId): F[Option[NotionUserResponse]]
+  def get(id: NotionUserId): OptionT[F, NotionUserResponse]
 
-  def me: F[Option[NotionUserResponse]]
+  def me: OptionT[F, NotionUserResponse]
 }
 
 final class NotionUserHttpClient[F[_]: Async](
@@ -24,7 +24,7 @@ final class NotionUserHttpClient[F[_]: Async](
 ) extends NotionUserClient[F] {
   private val users = s"${config.url}/${notion.v1}/users"
 
-  override def list: F[List[UserResponse]] = {
+  override def list: OptionT[F, List[UserResponse]] = {
     def tick(cursor: Option[Cursor]): OptionT[F, PaginatedList[UserResponse]] =
       OptionT(
         basicRequestWithHeaders
@@ -35,23 +35,26 @@ final class NotionUserHttpClient[F[_]: Async](
           .flatMap(optionIfSuccess(_)),
       )
 
-    concatPaginatedLists(tick).getOrElse(List())
+    concatPaginatedLists(tick)
   }
 
-  override def get(id: UserId): F[Option[UserResponse]] =
-    basicRequestWithHeaders
-      .get(uri"$users/$id")
-      .response(notion.unwrap[F, Option[UserResponse]])
-      .readTimeout(config.timeout)
-      .send(sttpBackend)
-      .flatMap(_.body)
+  override def get(id: UserId): OptionT[F, UserResponse] =
+    OptionT(
+      basicRequestWithHeaders
+        .get(uri"$users/$id")
+        .response(notion.unwrap[F, UserResponse])
+        .readTimeout(config.timeout)
+        .send(sttpBackend)
+        .flatMap(optionIfSuccess(_)),
+    )
 
-  override def me: F[Option[UserResponse]] =
-    basicRequestWithHeaders
-      .get(uri"$users/me")
-      .response(notion.unwrap[F, Option[UserResponse]])
-      .readTimeout(config.timeout)
-      .send(sttpBackend)
-      .flatMap(_.body)
-
+  override def me: OptionT[F, UserResponse] =
+    OptionT(
+      basicRequestWithHeaders
+        .get(uri"$users/me")
+        .response(notion.unwrap[F, UserResponse])
+        .readTimeout(config.timeout)
+        .send(sttpBackend)
+        .flatMap(optionIfSuccess(_)),
+    )
 }

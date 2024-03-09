@@ -1,9 +1,11 @@
 package org.kote.repository
 
 import cats.Monad
+import cats.data.OptionT
 import org.kote.adapter.Adapter
 import org.kote.client.notion._
 import org.kote.common.cache.Cache
+import org.kote.domain.board.Board.BoardId
 import org.kote.domain.group.Group
 import org.kote.domain.group.Group.GroupId
 import org.kote.domain.task.Task.TaskId
@@ -11,7 +13,9 @@ import org.kote.repository.GroupRepository.GroupUpdateCommand
 import org.kote.repository.inmemory.InMemoryGroupRepository
 import org.kote.repository.notion.NotionGroupRepository
 
-trait GroupRepository[F[_]] extends UpdatableRepository[F, Group, GroupId, GroupUpdateCommand]
+trait GroupRepository[F[_]] extends UpdatableRepository[F, Group, GroupId, GroupUpdateCommand] {
+  def list(boardId: BoardId): OptionT[F, List[Group]]
+}
 
 object GroupRepository {
   sealed trait GroupUpdateCommand extends UpdateCommand

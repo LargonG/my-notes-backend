@@ -1,5 +1,7 @@
 package org.kote.domain.task
 
+import org.kote.domain.board.Board.BoardId
+import org.kote.domain.group.Group.GroupId
 import sttp.tapir.Schema
 import tethys.derivation.semiauto.{jsonReader, jsonWriter}
 import tethys.{JsonReader, JsonWriter}
@@ -7,6 +9,8 @@ import tethys.{JsonReader, JsonWriter}
 import scala.annotation.nowarn
 
 final case class CreateTask(
+    board: BoardId,
+    group: GroupId,
     title: String,
 )
 

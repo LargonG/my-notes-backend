@@ -25,9 +25,9 @@ trait NotionDatabaseClient[F[_]] {
     * @return
     *   ответ сервера notion, только что созданная база данных
     */
-  def create(request: NotionDatabaseCreateRequest): F[NotionDatabaseResponse]
+  def create(request: NotionDatabaseCreateRequest): OptionT[F, NotionDatabaseResponse]
 
-  def search(request: NotionDatabaseSearchRequest): F[List[NotionDatabaseResponse]]
+  def search(request: NotionDatabaseSearchRequest): OptionT[F, List[NotionDatabaseResponse]]
 
   /** Получает уже существующую базу данных из notion, её характеристику
     * @param id
@@ -65,14 +65,16 @@ final class NotionDatabaseHttpClient[F[_]: Async](
     * @return
     *   ответ сервера notion, только что созданная база данных
     */
-  override def create(request: DbRequest): F[DbResponse] =
-    basicRequestWithHeaders
-      .post(uri"$databases")
-      .body(request)
-      .response(unwrap[F, DbResponse])
-      .readTimeout(config.timeout)
-      .send(sttpBackend)
-      .flatMap(_.body)
+  override def create(request: DbRequest): OptionT[F, DbResponse] =
+    OptionT(
+      basicRequestWithHeaders
+        .post(uri"$databases")
+        .body(request)
+        .response(unwrap[F, DbResponse])
+        .readTimeout(config.timeout)
+        .send(sttpBackend)
+        .flatMap(optionIfSuccess(_)),
+    )
 
   /** Получает уже существующую базу данных из notion, её характеристику "Retrieve" endpoint в
     * notion api
@@ -92,7 +94,7 @@ final class NotionDatabaseHttpClient[F[_]: Async](
         .flatten,
     )
 
-  override def search(request: DbSearchRequest): F[List[DbResponse]] = {
+  override def search(request: DbSearchRequest): OptionT[F, List[DbResponse]] = {
     def tick(cursor: Option[Cursor]): OptionT[F, PaginatedList[DbResponse]] =
       OptionT(
         basicRequestWithHeaders
@@ -104,7 +106,7 @@ final class NotionDatabaseHttpClient[F[_]: Async](
           .flatMap(optionIfSuccess(_)),
       )
 
-    concatPaginatedLists(tick).getOrElse(List())
+    concatPaginatedLists(tick)
   }
 
   /** Список всех страниц, относящихся к базе данных (т.е. у которых parent выставлен на id) "Query"

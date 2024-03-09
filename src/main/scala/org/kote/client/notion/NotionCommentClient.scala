@@ -11,7 +11,17 @@ import org.kote.client.notion.model.page.PageId
 import sttp.client3.circe._
 import sttp.client3.{SttpBackend, UriContext}
 
+/**
+ *
+ * @tparam F
+ */
 trait NotionCommentClient[F[_]] {
+  /**
+   * Создаёт комментарий
+   *
+   * @param request
+   * @return
+   */
   def create(request: NotionCommentCreateRequest): OptionT[F, NotionCommentResponse]
 
   def get(page: NotionPageId): OptionT[F, List[NotionCommentResponse]]

@@ -9,6 +9,7 @@ import org.kote.adapter.Adapter.{FromAdapter, ToAdapter}
 import org.kote.client.notion._
 import org.kote.domain.comment.Comment
 import org.kote.domain.comment.Comment.CommentId
+import org.kote.domain.task.Task
 import org.kote.repository.CommentRepository
 
 case class NotionCommentRepository[F[_]: Monad](client: NotionCommentClient[F])(implicit
@@ -19,14 +20,14 @@ case class NotionCommentRepository[F[_]: Monad](client: NotionCommentClient[F])(
     response <- client.create(obj.toRequest)
   } yield response.fromResponse).as(1L).getOrElse(0L)
 
-  // нет
-  override def list: F[List[Comment]] = ???
+  override def list(taskId: Task.TaskId): OptionT[F, List[Comment]] = ???
 
   override def get(id: CommentId): OptionT[F, Comment] = (for {
-    list <- client.get(id.toRequest)
-    response = list.find(r => r.id.fromResponse == id)
+                                                                          list <- client.get(id.toRequest)
+      response = list.find(r => r.id.fromResponse == id)
   } yield response
     .map(_.fromResponse)).flatTransform(_.flatten.pure)
 
   override def delete(id: CommentId): OptionT[F, Comment] = get(id)
+
 }

@@ -12,9 +12,9 @@ import sttp.client3.circe._
 import sttp.client3.{SttpBackend, UriContext}
 
 trait NotionPageClient[F[_]] {
-  def create(request: NotionPageCreateRequest): F[NotionPageResponse]
+  def create(request: NotionPageCreateRequest): OptionT[F, NotionPageResponse]
 
-  def search(request: NotionPageSearchRequest): F[List[NotionPageResponse]]
+  def search(request: NotionPageSearchRequest): OptionT[F, List[NotionPageResponse]]
 
   def get(id: NotionPageId): OptionT[F, NotionPageResponse]
 
@@ -38,16 +38,18 @@ final class NotionPageHttpClient[F[_]: Async](
   private val baseUrl = s"${config.url}/$v1"
   private val pages = s"$baseUrl/pages"
 
-  override def create(request: PageRequest): F[PageResponse] =
-    basicRequestWithHeaders
-      .post(uri"$pages")
-      .body(request)
-      .response(unwrap[F, PageResponse])
-      .readTimeout(config.timeout)
-      .send(sttpBackend)
-      .flatMap(_.body)
+  override def create(request: PageRequest): OptionT[F, PageResponse] =
+    OptionT(
+      basicRequestWithHeaders
+        .post(uri"$pages")
+        .body(request)
+        .response(unwrap[F, PageResponse])
+        .readTimeout(config.timeout)
+        .send(sttpBackend)
+        .flatMap(optionIfSuccess(_)),
+    )
 
-  override def search(request: PageSearchRequest): F[List[PageResponse]] = {
+  override def search(request: PageSearchRequest): OptionT[F, List[PageResponse]] = {
     def tick(cursor: Option[Cursor]): OptionT[F, PaginatedList[PageResponse]] =
       OptionT(
         basicRequestWithHeaders
@@ -59,7 +61,7 @@ final class NotionPageHttpClient[F[_]: Async](
           .flatMap(optionIfSuccess(_)),
       )
 
-    concatPaginatedLists(tick).getOrElse(List())
+    concatPaginatedLists(tick)
   }
 
   override def get(id: PageId): OptionT[F, PageResponse] =
@@ -82,9 +84,6 @@ final class NotionPageHttpClient[F[_]: Async](
         .flatMap(optionIfSuccess(_)),
     )
 
-  override def achieve(pageId: PageId): OptionT[F, PageResponse] =
-    updateProperties(pageId, PageUpdateRequest(Map.empty, achieved = true))
-
   override def updateProperties(
       pageId: PageId,
       request: PageUpdateRequest,
@@ -98,4 +97,7 @@ final class NotionPageHttpClient[F[_]: Async](
         .send(sttpBackend)
         .flatMap(optionIfSuccess(_)),
     )
+
+  override def achieve(pageId: PageId): OptionT[F, PageResponse] =
+    updateProperties(pageId, PageUpdateRequest(Map.empty, achieved = true))
 }

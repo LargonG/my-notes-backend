@@ -95,7 +95,7 @@ class RepositoryUserService[F[_]: UUIDGen: FlatMap: Clock](
     userRepository.update(id, cmds).map(_.toUnsafeResponse)
 
   override def list: F[List[UserResponse]] =
-    userRepository.list.map(_.map(_.toResponse))
+    userRepository.all.map(_.map(_.toResponse))
 
   override def get(id: UserId): OptionT[F, UserResponse] =
     userRepository.get(id).map(_.toResponse)

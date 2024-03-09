@@ -1,8 +1,10 @@
 package org.kote.domain.task
 
 import org.kote.common.tethys.TethysInstances
+import org.kote.domain.board.Board.BoardId
 import org.kote.domain.comment.Comment.CommentId
 import org.kote.domain.content.Content
+import org.kote.domain.group.Group.GroupId
 import org.kote.domain.task.Task.{Status, TaskId}
 import org.kote.domain.user.User.UserId
 import sttp.tapir.Schema
@@ -13,6 +15,8 @@ import java.util.UUID
 
 final case class Task(
     id: TaskId,
+    board: BoardId,
+    group: GroupId,
     title: String,
     assigns: List[UserId],
     status: Status,
@@ -41,6 +45,8 @@ object Task {
   def fromCreateTask(id: UUID, date: Instant, createTask: CreateTask): Task =
     Task(
       id = TaskId(id),
+      createTask.board,
+      createTask.group,
       title = createTask.title,
       assigns = List(),
       status = "", // TODO: тут должно быть что-то поумнее

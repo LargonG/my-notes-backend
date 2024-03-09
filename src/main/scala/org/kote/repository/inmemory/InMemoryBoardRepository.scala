@@ -6,6 +6,7 @@ import cats.implicits.toFunctorOps
 import org.kote.common.cache.Cache
 import org.kote.domain.board.Board
 import org.kote.domain.board.Board.BoardId
+import org.kote.domain.user.User
 import org.kote.repository.BoardRepository
 import org.kote.repository.BoardRepository.BoardUpdateCommand
 
@@ -14,7 +15,10 @@ class InMemoryBoardRepository[F[_]: Monad](cache: Cache[F, BoardId, Board])
 
   override def create(board: Board): F[Long] = cache.add(board.id, board).as(1L)
 
-  override def list: F[List[Board]] = cache.values
+  override def all: F[List[Board]] = cache.values
+
+  override def list(userId: User.UserId): OptionT[F, List[Board]] =
+    OptionT.liftF(cache.values.map(_.filter(_.owner == userId)))
 
   override def get(id: BoardId): OptionT[F, Board] = OptionT(cache.get(id))
 
@@ -31,4 +35,5 @@ class InMemoryBoardRepository[F[_]: Monad](cache: Cache[F, BoardId, Board])
 
     cacheUpdateAndGet(id, cmds, loop, get, cache)
   }
+
 }

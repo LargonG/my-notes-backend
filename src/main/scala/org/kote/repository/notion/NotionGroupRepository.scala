@@ -5,6 +5,7 @@ import cats.data.OptionT
 import org.kote.adapter.Adapter
 import org.kote.adapter.Adapter.{FromAdapter, ToAdapter}
 import org.kote.client.notion._
+import org.kote.domain.board.Board.BoardId
 import org.kote.domain.group.Group
 import org.kote.domain.group.Group.GroupId
 import org.kote.repository.GroupRepository
@@ -22,19 +23,14 @@ case class NotionGroupRepository[F[_]: Monad](
       _ <- dbClient.update(obj.id.toRequest, obj.toRequest)
     } yield 1L).getOrElse(0L)
 
-  // нет
-  override def list: F[List[Group]] = ???
+  override def list(boardId: BoardId): OptionT[F, List[Group]] = ???
 
   override def get(id: GroupId): OptionT[F, Group] =
     for {
       response <- dbClient.get(id.toRequest)
     } yield response.fromResponse
 
-  /** Notion не предоставляет способа удалить данные...
-    * @param id
-    * @return
-    */
-  override def delete(id: GroupId): OptionT[F, Group] = OptionT.none[F, Group]
+  override def delete(id: GroupId): OptionT[F, Group] = get(id)
 
   // Опять-таки, что-то сложное
   override def update(

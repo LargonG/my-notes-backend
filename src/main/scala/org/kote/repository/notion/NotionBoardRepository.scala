@@ -5,8 +5,12 @@ import cats.data.OptionT
 import cats.syntax.functor._
 import org.kote.adapter.Adapter
 import org.kote.adapter.Adapter.{FromAdapter, ToAdapter}
-import org.kote.client.notion.NotionDatabaseClient
-import org.kote.client.notion.model.database.{DbId, DbRequest, DbResponse}
+import org.kote.client.notion.{
+  NotionDatabaseClient,
+  NotionDatabaseCreateRequest,
+  NotionDatabaseId,
+  NotionDatabaseResponse,
+}
 import org.kote.domain.board.Board
 import org.kote.domain.board.Board.BoardId
 import org.kote.repository.BoardRepository
@@ -14,8 +18,8 @@ import org.kote.repository.BoardRepository
 case class NotionBoardRepository[F[_]: Applicative](
     client: NotionDatabaseClient[F],
 )(implicit
-    val boardAdapter: Adapter[Board, DbRequest, DbResponse],
-    val idAdapter: Adapter[BoardId, DbId, DbId],
+    val boardAdapter: Adapter[Board, NotionDatabaseCreateRequest, NotionDatabaseResponse],
+    val idAdapter: Adapter[BoardId, NotionDatabaseId, NotionDatabaseId],
 ) extends BoardRepository[F] {
   override def create(obj: Board): F[Long] =
     (for {

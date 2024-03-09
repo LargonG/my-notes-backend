@@ -2,8 +2,12 @@ package org.kote.repository
 
 import cats.{Applicative, Monad}
 import org.kote.adapter.Adapter
-import org.kote.client.notion.NotionDatabaseClient
-import org.kote.client.notion.model.database.{DbId, DbRequest, DbResponse}
+import org.kote.client.notion.{
+  NotionDatabaseClient,
+  NotionDatabaseCreateRequest,
+  NotionDatabaseId,
+  NotionDatabaseResponse,
+}
 import org.kote.common.cache.Cache
 import org.kote.domain.board.Board
 import org.kote.domain.board.Board.BoardId
@@ -24,7 +28,7 @@ object BoardRepository {
   def notion[F[_]: Applicative](
       client: NotionDatabaseClient[F],
   )(implicit
-      boardAdapter: Adapter[Board, DbRequest, DbResponse],
-      idAdapter: Adapter[BoardId, DbId, DbId],
+      boardAdapter: Adapter[Board, NotionDatabaseCreateRequest, NotionDatabaseResponse],
+      idAdapter: Adapter[BoardId, NotionDatabaseId, NotionDatabaseId],
   ) = new NotionBoardRepository[F](client)
 }

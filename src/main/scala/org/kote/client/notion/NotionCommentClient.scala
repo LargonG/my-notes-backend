@@ -8,13 +8,13 @@ import org.kote.client.notion.model.comment.{CommentRequest, CommentResponse}
 import org.kote.client.notion.model.list.PaginatedList
 import org.kote.client.notion.model.list.PaginatedList.Cursor
 import org.kote.client.notion.model.page.PageId
-import sttp.client3.{SttpBackend, UriContext}
 import sttp.client3.circe._
+import sttp.client3.{SttpBackend, UriContext}
 
 trait NotionCommentClient[F[_]] {
-  def create(request: CommentRequest): OptionT[F, CommentResponse]
+  def create(request: NotionCommentCreateRequest): OptionT[F, NotionCommentResponse]
 
-  def get(page: PageId): OptionT[F, List[CommentResponse]]
+  def get(page: NotionPageId): OptionT[F, List[NotionCommentResponse]]
 }
 
 final class NotionCommentHttpClient[F[_]: Async](

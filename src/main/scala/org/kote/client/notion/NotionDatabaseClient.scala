@@ -19,7 +19,7 @@ trait NotionDatabaseClient[F[_]] {
     * @return
     *   ответ сервера notion, только что созданная база данных
     */
-  def create(request: DbRequest): F[DbResponse]
+  def create(request: NotionDatabaseCreateRequest): F[NotionDatabaseResponse]
 
   /** Получает уже существующую базу данных из notion, её характеристику
     * @param id
@@ -27,7 +27,7 @@ trait NotionDatabaseClient[F[_]] {
     * @return
     *   характеристику базы данных, если она существует
     */
-  def get(id: DbId): OptionT[F, DbResponse]
+  def get(id: NotionDatabaseId): OptionT[F, NotionDatabaseResponse]
 
   /** Список всех страниц, относящихся к базе данных (т.е. у которых parent выставлен на id)
     * @param id
@@ -36,9 +36,12 @@ trait NotionDatabaseClient[F[_]] {
     *   Список всех страниц, любой длины, если существует база данных с таким id и мы имеем к ней
     *   доступ
     */
-  def list(id: DbId): OptionT[F, List[PageResponse]]
+  def list(id: NotionDatabaseId): OptionT[F, List[NotionPageResponse]]
 
-  def update(id: DbId, request: DbUpdateRequest): OptionT[F, DbResponse]
+  def update(
+      id: NotionDatabaseId,
+      request: NotionDatabasePropertiesUpdateRequest,
+  ): OptionT[F, NotionDatabasePropertiesUpdateResponse]
 }
 
 final class NotionDatabaseHttpClient[F[_]: Async](

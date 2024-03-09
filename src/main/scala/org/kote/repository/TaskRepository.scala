@@ -3,8 +3,8 @@ package org.kote.repository
 import cats.Monad
 import cats.effect.kernel.Clock
 import org.kote.adapter.Adapter
-import org.kote.client.notion.model.page.{PageId, PageRequest}
-import org.kote.client.notion.{NotionBlockClient, NotionPageClient}
+import org.kote.client.notion._
+import org.kote.client.notion.model.page.NotionPageFullResponse
 import org.kote.common.cache.Cache
 import org.kote.domain.comment.Comment.CommentId
 import org.kote.domain.content.Content
@@ -14,7 +14,6 @@ import org.kote.domain.user.User.UserId
 import org.kote.repository.TaskRepository.TaskUpdateCommand
 import org.kote.repository.inmemory.InMemoryTaskRepository
 import org.kote.repository.notion.NotionTaskRepository
-import org.kote.repository.notion.NotionTaskRepository.PageWithBlocksResponse
 
 /** Описывает хранилище задач
   * @tparam F
@@ -41,7 +40,7 @@ object TaskRepository {
       pageClient: NotionPageClient[F],
       blockClient: NotionBlockClient[F],
   )(implicit
-      taskAdapter: Adapter[Task, PageRequest, PageWithBlocksResponse],
-      idAdapter: Adapter[TaskId, PageId, PageId],
+      taskAdapter: Adapter[Task, NotionPageCreateRequest, NotionPageFullResponse],
+      idAdapter: Adapter[TaskId, NotionPageId, NotionPageId],
   ) = new NotionTaskRepository[F](pageClient, blockClient)
 }

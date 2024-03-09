@@ -6,22 +6,25 @@ import cats.implicits.toFlatMapOps
 import org.kote.client.notion.configuration.NotionConfiguration
 import org.kote.client.notion.model.page._
 import org.kote.client.notion.model.property.PropertyItem
-import sttp.client3.{SttpBackend, UriContext}
 import sttp.client3.circe._
+import sttp.client3.{SttpBackend, UriContext}
 
 trait NotionPageClient[F[_]] {
-  def create(request: PageRequest): F[PageResponse]
+  def create(request: NotionPageCreateRequest): F[NotionPageResponse]
 
-  def get(id: PageId): OptionT[F, PageResponse]
+  def get(id: NotionPageId): OptionT[F, NotionPageResponse]
 
-  def getProperty(pageId: PageId, propertyId: String): OptionT[F, PropertyItem]
+  def getPropertyItem(
+      pageId: NotionPageId,
+      propertyId: String,
+  ): OptionT[F, NotionPagePropertyItemResponse]
 
-  def updateProperty(
-      pageId: PageId,
-      request: PageUpdateRequest,
-  ): OptionT[F, PageResponse]
+  def updateProperties(
+      pageId: NotionPageId,
+      request: NotionPagePropertiesUpdateRequest,
+  ): OptionT[F, NotionPageResponse]
 
-  def achieve(pageId: PageId): OptionT[F, PageResponse]
+  def achieve(pageId: NotionPageId): OptionT[F, NotionPageResponse]
 }
 
 final class NotionPageHttpClient[F[_]: Async](
@@ -49,9 +52,7 @@ final class NotionPageHttpClient[F[_]: Async](
         .flatMap(optionIfSuccess(_)),
     )
 
-  // todo: оно пока что возвращает paginated list, а мы с ним в проекте не хотим работать,
-  //  если будут возникать проблемы -- поправить
-  override def getProperty(pageId: PageId, propertyId: String): OptionT[F, PropertyItem] =
+  override def getPropertyItem(pageId: PageId, propertyId: String): OptionT[F, PropertyItem] =
     OptionT(
       basicRequestWithHeaders
         .get(uri"$pages/$pageId/properties/$propertyId")
@@ -61,7 +62,10 @@ final class NotionPageHttpClient[F[_]: Async](
         .flatMap(optionIfSuccess(_)),
     )
 
-  override def updateProperty(
+  override def achieve(pageId: PageId): OptionT[F, PageResponse] =
+    updateProperties(pageId, PageUpdateRequest(Map.empty, achieved = true))
+
+  override def updateProperties(
       pageId: PageId,
       request: PageUpdateRequest,
   ): OptionT[F, PageResponse] =
@@ -74,7 +78,4 @@ final class NotionPageHttpClient[F[_]: Async](
         .send(sttpBackend)
         .flatMap(optionIfSuccess(_)),
     )
-
-  override def achieve(pageId: PageId): OptionT[F, PageResponse] =
-    updateProperty(pageId, PageUpdateRequest(Map.empty, achieved = true))
 }

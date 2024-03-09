@@ -13,16 +13,18 @@ import sttp.client3.circe._
 import sttp.client3.{SttpBackend, UriContext}
 
 trait NotionBlockClient[F[_]] {
-  def append(pageId: PageId, children: List[BlockRequest]): OptionT[F, PaginatedList[BlockResponse]]
+  def append(
+      pageId: NotionPageId,
+      children: List[NotionBlockRequest],
+  ): OptionT[F, PaginatedList[NotionBlockResponse]]
 
-  def get(id: BlockId): OptionT[F, BlockResponse]
+  def get(id: NotionBlockId): OptionT[F, NotionBlockResponse]
 
-  def getContent(id: PageId): OptionT[F, List[BlockResponse]]
+  def getContent(id: NotionPageId): OptionT[F, List[NotionBlockResponse]]
 
-  // todo: не понятно, какой тут нужен тип, разобраться
-  def update(id: BlockId, request: BlockRequest): OptionT[F, BlockResponse]
+  def update(id: NotionBlockId, request: NotionBlockRequest): OptionT[F, NotionBlockResponse]
 
-  def delete(id: BlockId): OptionT[F, BlockResponse]
+  def delete(id: NotionBlockId): OptionT[F, NotionBlockResponse]
 }
 
 final class NotionBlockHttpClient[F[_]: Async](

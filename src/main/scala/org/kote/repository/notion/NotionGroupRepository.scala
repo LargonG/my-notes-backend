@@ -4,8 +4,7 @@ import cats.Monad
 import cats.data.OptionT
 import org.kote.adapter.Adapter
 import org.kote.adapter.Adapter.{FromAdapter, ToAdapter}
-import org.kote.client.notion.model.database.{DbId, DbResponse, DbUpdateRequest}
-import org.kote.client.notion.{NotionDatabaseClient, NotionPageClient}
+import org.kote.client.notion._
 import org.kote.domain.group.Group
 import org.kote.domain.group.Group.GroupId
 import org.kote.repository.GroupRepository
@@ -15,8 +14,8 @@ case class NotionGroupRepository[F[_]: Monad](
     pageClient: NotionPageClient[F],
     dbClient: NotionDatabaseClient[F],
 )(implicit
-    val groupAdapter: Adapter[Group, DbUpdateRequest, DbResponse],
-    val groupIdAdapter: Adapter[GroupId, DbId, DbId],
+    val groupAdapter: Adapter[Group, NotionDatabasePropertiesUpdateRequest, NotionDatabaseResponse],
+    val groupIdAdapter: Adapter[GroupId, NotionDatabaseId, NotionDatabaseId],
 ) extends GroupRepository[F] {
   override def create(obj: Group): F[Long] =
     (for {

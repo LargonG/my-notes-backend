@@ -11,11 +11,11 @@ import org.kote.client.notion.model.user.{UserId, UserResponse}
 import sttp.client3.{SttpBackend, UriContext}
 
 trait NotionUserClient[F[_]] {
-  def list: F[List[UserResponse]]
+  def list: F[List[NotionUserResponse]]
 
-  def get(id: UserId): F[Option[UserResponse]]
+  def get(id: NotionUserId): F[Option[NotionUserResponse]]
 
-  def me: F[Option[UserResponse]]
+  def me: F[Option[NotionUserResponse]]
 }
 
 final class NotionUserHttpClient[F[_]: Async](

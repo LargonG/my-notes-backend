@@ -12,7 +12,7 @@ import org.kote.domain.comment.Comment.CommentId
 import org.kote.repository.CommentRepository
 
 case class NotionCommentRepository[F[_]: Monad](client: NotionCommentClient[F])(implicit
-    val commentAdapter: Adapter[Comment, NotionCommentRequest, NotionCommentResponse],
+    val commentAdapter: Adapter[Comment, NotionCommentCreateRequest, NotionCommentResponse],
     val idAdapter: Adapter[CommentId, NotionPageId, NotionCommentId],
 ) extends CommentRepository[F] {
   override def create(obj: Comment): F[Long] = (for {

@@ -16,7 +16,7 @@ object CommentRepository {
     new InMemoryCommentRepository[F](cache)
 
   def notion[F[_]: Monad](client: NotionCommentClient[F])(implicit
-      commentAdapter: Adapter[Comment, NotionCommentRequest, NotionCommentResponse],
+      commentAdapter: Adapter[Comment, NotionCommentCreateRequest, NotionCommentResponse],
       idAdapter: Adapter[CommentId, NotionPageId, NotionCommentId],
   ) = new NotionCommentRepository[F](client)
 }

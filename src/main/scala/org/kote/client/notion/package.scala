@@ -11,13 +11,55 @@ import sttp.client3.circe.asJsonAlways
 import sttp.client3.{Empty, RequestT, Response, ResponseAs, basicRequest}
 
 package object notion {
+
+  /** Типы для внешнего использования
+    */
+
+  // Database //
+  type NotionDatabaseId = model.database.DbId
+
+  type NotionDatabaseCreateRequest = model.database.DbRequest
+  type NotionDatabasePropertiesUpdateRequest = model.database.DbUpdateRequest
+
+  type NotionDatabasePropertiesUpdateResponse = model.database.DbResponse
+  type NotionDatabaseResponse = model.database.DbResponse
+
+  // Page //
   type NotionPageId = model.page.PageId
+
+  type NotionPageCreateRequest = model.page.PageRequest
+  type NotionPagePropertiesUpdateRequest = model.page.PageUpdateRequest
+
+  type NotionPagePropertyItemResponse = model.property.PropertyItem
+  type NotionPageResponse = model.page.PageResponse
+  // Block //
+  type NotionBlockId = model.block.BlockId
+  type NotionBlockRequest = model.block.BlockRequest
+  type NotionBlockResponse = model.block.BlockResponse
+  // Comment //
   type NotionCommentId = model.comment.CommentId
-  type NotionCommentRequest = model.comment.CommentRequest
+  type NotionCommentCreateRequest = model.comment.CommentRequest
+  // File //
+  type NotionFileHeader = model.file.FileHeader
   type NotionCommentResponse = model.comment.CommentResponse
+  type NotionInternalFile = model.file.NotionFile
+  type NotionExternalFile = model.file.ExternalFile
+  // Text //
+  type NotionRichText = model.text.RichText
+  type NotionText = model.text.Text
+  // User //
+  type NotionUserId = model.user.UserId
+
+  /** Объединяет поля properties у page и children blocks
+    *
+    * @param info
+    *   properties
+    * @param blocks
+    *   children
+    */
+
   type NotionUserRequest = model.user.UserRequest
   type NotionUserResponse = model.user.UserResponse
-  type NotionUserId = model.user.UserId
 
   val v1 = "api/v1"
 

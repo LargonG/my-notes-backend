@@ -23,8 +23,8 @@ case class NotionCommentRepository[F[_]: Monad](client: NotionCommentClient[F])(
   override def list(taskId: Task.TaskId): OptionT[F, List[Comment]] = ???
 
   override def get(id: CommentId): OptionT[F, Comment] = (for {
-                                                                          list <- client.get(id.toRequest)
-      response = list.find(r => r.id.fromResponse == id)
+    list <- client.get(id.toRequest)
+    response = list.find(r => r.id.fromResponse == id)
   } yield response
     .map(_.fromResponse)).flatTransform(_.flatten.pure)
 

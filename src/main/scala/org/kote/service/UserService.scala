@@ -1,14 +1,15 @@
 package org.kote.service
 
-import cats.FlatMap
+import cats.Monad
 import cats.data.OptionT
 import cats.effect.kernel.Clock
 import cats.effect.std.UUIDGen
+import cats.implicits.toTraverseOps
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import org.kote.domain.user.User.UserId
 import org.kote.domain.user.{CreateUser, UnsafeUserResponse, User, UserResponse}
-import org.kote.repository.UserRepository
+import org.kote.repository.{BoardRepository, GroupRepository, TaskRepository, UserRepository}
 import org.kote.repository.UserRepository.UserUpdateCommand
 
 trait UserService[F[_]] {
@@ -74,14 +75,20 @@ trait UserService[F[_]] {
 }
 
 object UserService {
-  def fromRepository[F[_]: UUIDGen: FlatMap: Clock](
+  def fromRepository[F[_]: UUIDGen: Monad: Clock](
       userRepository: UserRepository[F],
+      boardRepository: BoardRepository[F],
+      groupRepository: GroupRepository[F],
+      taskRepository: TaskRepository[F],
   ): UserService[F] =
-    new RepositoryUserService[F](userRepository)
+    new RepositoryUserService[F](userRepository, boardRepository, groupRepository, taskRepository)
 }
 
-class RepositoryUserService[F[_]: UUIDGen: FlatMap: Clock](
+class RepositoryUserService[F[_]: UUIDGen: Monad: Clock](
     userRepository: UserRepository[F],
+    boardRepository: BoardRepository[F],
+    groupRepository: GroupRepository[F],
+    taskRepository: TaskRepository[F],
 ) extends UserService[F] {
   override def create(createUser: CreateUser): F[UnsafeUserResponse] =
     for {
@@ -104,10 +111,13 @@ class RepositoryUserService[F[_]: UUIDGen: FlatMap: Clock](
     userRepository.get(id).map(_.toUnsafeResponse)
 
   override def delete(id: UserId): OptionT[F, UnsafeUserResponse] =
-    userRepository.delete(id).map(_.toUnsafeResponse)
-  /*
-  todo: do some smart stuff:
-    delete all boards, that user owns,
-    delete user from every party
-   */
+    for {
+      deleted <- userRepository.delete(id)
+      boards <- boardRepository.list(deleted.id)
+      _ <- boards.traverse(board => boardRepository.delete(board.id))
+      groupIds = boards.flatMap(_.groups)
+      groups <- groupIds.traverse(groupRepository.delete)
+      taskIds = groups.flatMap(_.tasks)
+      _ <- taskIds.traverse(taskRepository.delete)
+    } yield deleted.toUnsafeResponse
 }

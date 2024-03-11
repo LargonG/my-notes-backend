@@ -59,7 +59,7 @@ class RepositoryTaskService[F[_]: UUIDGen: Monad: Clock](
       time <- Clock[F].realTimeInstant
       task = Task.fromCreateTask(uuid, time, createTask)
       _ <- taskRepository.create(task)
-      // todo: update group
+      _ <- groupRepository.update(task.group, GroupRepository.AddTask(task.id)).value
     } yield task.toResponse
 
   override def listByStatus(boardId: BoardId, status: Status): OptionT[F, List[TaskResponse]] =
@@ -90,5 +90,8 @@ class RepositoryTaskService[F[_]: UUIDGen: Monad: Clock](
     taskRepository.update(id, cmds).map(_.toResponse)
 
   override def delete(id: TaskId): OptionT[F, TaskResponse] =
-    taskRepository.delete(id).map(_.toResponse) // todo: update group
+    for {
+      deleted <- taskRepository.delete(id)
+      _ <- groupRepository.update(deleted.group, GroupRepository.RemoveTask(deleted.id))
+    } yield deleted.toResponse
 }

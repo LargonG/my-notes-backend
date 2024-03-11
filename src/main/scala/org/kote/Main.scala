@@ -46,7 +46,7 @@ object Main extends IOApp {
         val fileRepo = FileRepository.inMemory(fileCache)
 
         List(
-          UserController.make(UserService.fromRepository(userRepo)),
+          UserController.make(UserService.fromRepository(userRepo, boardRepo, groupRepo, taskRepo)),
           TaskController.make(TaskService.fromRepository(boardRepo, groupRepo, taskRepo)),
           GroupController.make(GroupService.fromRepository(boardRepo, groupRepo, taskRepo)),
           BoardController.make(BoardService.fromRepository(boardRepo, groupRepo, taskRepo)),

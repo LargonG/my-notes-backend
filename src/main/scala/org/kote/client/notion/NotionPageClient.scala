@@ -31,6 +31,14 @@ trait NotionPageClient[F[_]] {
   def achieve(pageId: NotionPageId): OptionT[F, NotionPageResponse]
 }
 
+object NotionPageClient {
+  def http[F[_]: Async](
+      backend: SttpBackend[F, Any],
+      config: NotionConfiguration,
+  ): NotionPageClient[F] =
+    new NotionPageHttpClient[F](backend, config)
+}
+
 final class NotionPageHttpClient[F[_]: Async](
     sttpBackend: SttpBackend[F, Any],
     implicit val config: NotionConfiguration,

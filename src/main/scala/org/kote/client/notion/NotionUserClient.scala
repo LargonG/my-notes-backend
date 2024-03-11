@@ -18,6 +18,14 @@ trait NotionUserClient[F[_]] {
   def me: OptionT[F, NotionUserResponse]
 }
 
+object NotionUserClient {
+  def http[F[_]: Async](
+      backend: SttpBackend[F, Any],
+      config: NotionConfiguration,
+  ): NotionUserClient[F] =
+    new NotionUserHttpClient[F](backend, config)
+}
+
 final class NotionUserHttpClient[F[_]: Async](
     sttpBackend: SttpBackend[F, Any],
     implicit val config: NotionConfiguration,

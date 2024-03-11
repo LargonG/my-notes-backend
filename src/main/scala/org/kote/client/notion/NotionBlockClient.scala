@@ -88,6 +88,14 @@ trait NotionBlockClient[F[_]] {
   def delete(id: NotionBlockId): OptionT[F, NotionBlockResponse]
 }
 
+object NotionBlockClient {
+  def http[F[_]: Async](
+      backend: SttpBackend[F, Any],
+      config: NotionConfiguration,
+  ): NotionBlockClient[F] =
+    new NotionBlockHttpClient[F](backend, config)
+}
+
 final class NotionBlockHttpClient[F[_]: Async](
     sttpBackend: SttpBackend[F, Any],
     implicit val config: NotionConfiguration,

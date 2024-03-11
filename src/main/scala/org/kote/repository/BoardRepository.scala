@@ -1,6 +1,7 @@
 package org.kote.repository
 
-import cats.data.OptionT
+import cats.data.{NonEmptyList, OptionT}
+import cats.effect.kernel.Async
 import cats.{Applicative, Monad}
 import org.kote.adapter.Adapter
 import org.kote.client.notion.{
@@ -16,6 +17,7 @@ import org.kote.domain.group.Group.GroupId
 import org.kote.domain.user.User.UserId
 import org.kote.repository.BoardRepository.BoardUpdateCommand
 import org.kote.repository.inmemory.InMemoryBoardRepository
+import org.kote.repository.mixers.MixerBoardRepository
 import org.kote.repository.notion.NotionBoardRepository
 
 trait BoardRepository[F[_]] extends UpdatableRepository[F, Board, BoardId, BoardUpdateCommand] {
@@ -41,4 +43,10 @@ object BoardRepository {
       boardAdapter: Adapter[Board, NotionDatabaseCreateRequest, NotionDatabaseResponse],
       idAdapter: Adapter[BoardId, NotionDatabaseId, NotionDatabaseId],
   ) = new NotionBoardRepository[F](client)
+
+  def mix[F[_]: Async](
+      main: BoardRepository[F],
+      other: BoardRepository[F]*,
+  ): BoardRepository[F] =
+    new MixerBoardRepository[F](NonEmptyList(main, other.toList))
 }

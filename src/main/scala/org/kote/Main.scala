@@ -5,8 +5,11 @@ import cats.data.OptionT
 import cats.effect.std.Env
 import cats.effect.{ExitCode, IO, IOApp}
 import com.comcast.ip4s.{Host, Port}
+import org.asynchttpclient.DefaultAsyncHttpClient
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.server.Router
+import org.kote.client.notion.NotionDatabaseClient
+import org.kote.client.notion.configuration.NotionConfiguration
 import org.kote.common.cache.Cache
 import org.kote.controller._
 import org.kote.domain.board.Board
@@ -23,10 +26,14 @@ import org.kote.domain.user.User
 import org.kote.domain.user.User.UserId
 import org.kote.repository._
 import org.kote.service._
+import sttp.client3.SttpBackend
+import sttp.client3.asynchttpclient.cats.AsyncHttpClientCatsBackend
 import sttp.tapir.server.http4s.Http4sServerInterpreter
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
 
 import java.nio.charset.StandardCharsets
+import scala.annotation.unused
+import scala.concurrent.duration.DurationInt
 
 object Main extends IOApp {
   override def run(args: List[String]): IO[ExitCode] =
@@ -37,11 +44,30 @@ object Main extends IOApp {
       boardCache <- Cache.ram[IO, BoardId, Board]
       commentCache <- Cache.ram[IO, CommentId, Comment]
       fileCache <- Cache.disk[IO, FileId, File]("files", StandardCharsets.UTF_8)
+
+      notionApiKey <- getNotionApiKey[IO].orElse(IO.pure(""))
       endpoints <- IO.delay {
+        val backend: SttpBackend[IO, Any] =
+          AsyncHttpClientCatsBackend.usingClient[IO](new DefaultAsyncHttpClient)
+
+        val config = NotionConfiguration(
+          apiKey = notionApiKey,
+          notionVersion = "2022-06-28",
+          url = "https://api.notion.com",
+          timeout = 10.seconds,
+        )
+
+        @unused
+        val databaseNotionClient: NotionDatabaseClient[IO] =
+          NotionDatabaseClient.http(backend, config)
+
         val userRepo = UserRepository.inMemory(userCache)
         val taskRepo = TaskRepository.inMemory(taskCache)
         val groupRepo = GroupRepository.inMemory(groupCache)
-        val boardRepo = BoardRepository.inMemory(boardCache)
+        val boardRepo =
+          BoardRepository.mix(
+            BoardRepository.inMemory(boardCache)
+          )
         val commentRepo = CommentRepository.inMemory(commentCache)
         val fileRepo = FileRepository.inMemory(fileCache)
 
@@ -80,6 +106,12 @@ object Main extends IOApp {
         ps.toIntOption.toRight(s"Expected int in HTTP_PORT env variable, but got $ps"),
       )
       .subflatMap(pi => Port.fromInt(pi).toRight(s"No such port $pi"))
+      .leftMap(new IllegalArgumentException(_))
+      .rethrowT
+
+  private def getNotionApiKey[F[_]: Env: MonadThrow]: F[String] =
+    OptionT(Env[F].get("NOTION_API_KEY"))
+      .toRight("NOTION_API_KEY not found")
       .leftMap(new IllegalArgumentException(_))
       .rethrowT
 }

@@ -52,6 +52,14 @@ trait NotionDatabaseClient[F[_]] {
   ): OptionT[F, NotionDatabasePropertiesUpdateResponse]
 }
 
+object NotionDatabaseClient {
+  def http[F[_]: Async](
+      backend: SttpBackend[F, Any],
+      config: NotionConfiguration,
+  ): NotionDatabaseClient[F] =
+    new NotionDatabaseHttpClient[F](backend, config)
+}
+
 final class NotionDatabaseHttpClient[F[_]: Async](
     sttpBackend: SttpBackend[F, Any],
     implicit val config: NotionConfiguration,

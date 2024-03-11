@@ -1,15 +1,16 @@
 package org.kote.service
 
-import cats.FlatMap
+import cats.Monad
 import cats.data.OptionT
 import cats.effect.std.UUIDGen
+import cats.implicits.toTraverseOps
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import org.kote.domain.board.Board.BoardId
 import org.kote.domain.board.{Board, BoardResponse, CreateBoard}
 import org.kote.domain.user.User.UserId
-import org.kote.repository.BoardRepository
 import org.kote.repository.BoardRepository.BoardUpdateCommand
+import org.kote.repository.{BoardRepository, GroupRepository, TaskRepository}
 
 trait BoardService[F[_]] {
   def create(
@@ -26,14 +27,18 @@ trait BoardService[F[_]] {
 }
 
 object BoardService {
-  def fromRepository[F[_]: UUIDGen: FlatMap](
+  def fromRepository[F[_]: UUIDGen: Monad](
       boardRepository: BoardRepository[F],
+      groupRepository: GroupRepository[F],
+      taskRepository: TaskRepository[F],
   ): BoardService[F] =
-    new RepositoryBoardService[F](boardRepository)
+    new RepositoryBoardService[F](boardRepository, groupRepository, taskRepository)
 }
 
-class RepositoryBoardService[F[_]: UUIDGen: FlatMap](
+class RepositoryBoardService[F[_]: UUIDGen: Monad](
     boardRepository: BoardRepository[F],
+    groupRepository: GroupRepository[F],
+    taskRepository: TaskRepository[F],
 ) extends BoardService[F] {
   override def create(createBoard: CreateBoard): F[BoardResponse] =
     for {
@@ -52,5 +57,9 @@ class RepositoryBoardService[F[_]: UUIDGen: FlatMap](
     boardRepository.update(id, cmds).map(_.toResponse)
 
   override def delete(id: BoardId): OptionT[F, BoardResponse] =
-    boardRepository.delete(id).map(_.toResponse)
+    for {
+      deleted <- boardRepository.delete(id)
+      groups <- deleted.groups.traverse(groupRepository.delete)
+      _ <- groups.traverse(_.tasks.traverse(taskRepository.delete))
+    } yield deleted.toResponse
 }

@@ -49,7 +49,7 @@ object Main extends IOApp {
           UserController.make(UserService.fromRepository(userRepo)),
           TaskController.make(TaskService.fromRepository(boardRepo, groupRepo, taskRepo)),
           GroupController.make(GroupService.fromRepository(groupRepo)),
-          BoardController.make(BoardService.fromRepository(boardRepo)),
+          BoardController.make(BoardService.fromRepository(boardRepo, groupRepo, taskRepo)),
           CommentController.make(CommentService.fromRepository(taskRepo, commentRepo)),
           FileController.make(FileService.fromRepository(taskRepo, fileRepo)),
         ).flatMap(_.endpoints)

@@ -9,8 +9,6 @@ import sttp.tapir._
 import sttp.tapir.json.tethysjson.jsonBody
 import sttp.tapir.server.ServerEndpoint
 
-import java.util.UUID
-
 class CommentController[F[_]](commentService: CommentService[F]) extends Controller[F] {
   private val standardPath: EndpointInput[Unit] = "api" / "v1" / "comment"
   private val pathWithCommentId: EndpointInput[CommentId] =
@@ -27,9 +25,9 @@ class CommentController[F[_]](commentService: CommentService[F]) extends Control
   private val listComments: ServerEndpoint[Any, F] =
     endpoint.get
       .summary("Посмотреть все комментарии к задаче")
-      .in(standardPath / path[UUID]("taskId"))
+      .in(standardPath / query[TaskId]("task_id"))
       .out(jsonBody[Option[List[CommentResponse]]])
-      .serverLogicSuccess(taskId => commentService.list(TaskId(taskId)).value)
+      .serverLogicSuccess(commentService.list(_).value)
 
   private val getComment: ServerEndpoint[Any, F] =
     endpoint.get

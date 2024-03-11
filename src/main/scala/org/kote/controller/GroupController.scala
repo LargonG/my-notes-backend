@@ -31,7 +31,12 @@ class GroupController[F[_]](groupService: GroupService[F]) extends Controller[F]
   private val moveTask: ServerEndpoint[Any, F] =
     endpoint.patch
       .summary("Переместить задачу в другую колонку")
-      .in(standardPath / path[GroupId]("from") / path[GroupId]("to") / path[TaskId]("what"))
+      .in(
+        standardPath / "move"
+          / query[GroupId]("from")
+          / query[GroupId]("to")
+          / query[TaskId]("what"),
+      )
       .out(jsonBody[Option[String]])
       .serverLogicSuccess { case (from, to, what) =>
         groupService.moveTask(from, to, what).value

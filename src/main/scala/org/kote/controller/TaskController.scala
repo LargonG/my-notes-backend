@@ -12,6 +12,7 @@ import sttp.tapir.server.ServerEndpoint
 
 class TaskController[F[_]](taskService: TaskService[F]) extends Controller[F] {
   private val standardPath: EndpointInput[Unit] = "api" / "v1" / "task"
+  private val standardPathWithTaskId: EndpointInput[TaskId] = standardPath / path[TaskId]("taskId")
 
   private val createTask: ServerEndpoint[Any, F] =
     endpoint.post
@@ -24,44 +25,36 @@ class TaskController[F[_]](taskService: TaskService[F]) extends Controller[F] {
   private val boardListTasks: ServerEndpoint[Any, F] =
     endpoint.get
       .summary("Список задач таблицы")
-      .in(standardPath / path[BoardId]("boardId"))
+      .in(standardPath / query[BoardId]("board_id"))
       .out(jsonBody[Option[List[TaskResponse]]])
       .serverLogicSuccess(taskService.list(_).value)
 
   private val columnListTasks: ServerEndpoint[Any, F] =
     endpoint.get
       .summary("Список задач колонки")
-      .in(standardPath / path[GroupId]("columnId"))
+      .in(standardPath / query[GroupId]("column_id"))
       .out(jsonBody[Option[List[TaskResponse]]])
       .serverLogicSuccess(taskService.listByGroup(_).value)
 
   private val statusListTasks: ServerEndpoint[Any, F] =
     endpoint.get
       .summary("Список задач по статусу")
-      .in(standardPath / path[BoardId]("boardId") / path[String]("status"))
+      .in(standardPath / query[BoardId]("board_id") / query[String]("status"))
       .out(jsonBody[Option[List[TaskResponse]]])
       .serverLogicSuccess { case (boardId, status) =>
         taskService.listByStatus(boardId, status).value
       }
-
   private val getTask: ServerEndpoint[Any, F] =
     endpoint.get
       .summary("Получить задачу")
-      .in(standardPath / path[TaskId]("taskId"))
+      .in(standardPathWithTaskId)
       .out(jsonBody[Option[TaskResponse]])
       .serverLogicSuccess(taskService.get(_).value)
-
-  // todo: нужно что-то умное
-//  private val updateTask: ServerEndpoint[Any, F] =
-//    endpoint.patch
-//      .in(standardPath / path[UUID]("taskId") / path[String]("title"))
-//      .out(jsonBody[Option[TaskResponse]])
-//      .serverLogicSuccess({ case (taskId, title) => taskService.update(taskId, ) })
 
   private val deleteTask: ServerEndpoint[Any, F] =
     endpoint.delete
       .summary("Удалить задачу")
-      .in(standardPath / path[TaskId]("taskId"))
+      .in(standardPathWithTaskId)
       .out(jsonBody[Option[TaskResponse]])
       .serverLogicSuccess(taskService.delete(_).value)
 

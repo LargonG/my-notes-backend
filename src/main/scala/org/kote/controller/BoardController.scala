@@ -24,7 +24,7 @@ class BoardController[F[_]](boardService: BoardService[F]) extends Controller[F]
   private val listBoardsByOwner: ServerEndpoint[Any, F] =
     endpoint.get
       .summary("Список досок пользователя")
-      .in(standardPath / path[UserId]("userId"))
+      .in(standardPath / query[UserId]("user_id"))
       .out(jsonBody[List[BoardResponse]])
       .serverLogicSuccess(boardService.list)
 

@@ -10,10 +10,13 @@ import sttp.tapir.json.tethysjson.jsonBody
 import sttp.tapir.server.ServerEndpoint
 
 class FileController[F[_]](fileService: FileService[F]) extends Controller[F] {
+  private val standardPath: EndpointInput[Unit] = "api" / "v1" / "file"
+  private val standardPathWithFileId: EndpointInput[FileId] = standardPath / path[FileId]("fileId")
+
   private val createFile: ServerEndpoint[Any, F] =
     endpoint.post
       .summary("Создать файл")
-      .in("api" / "v1" / "file")
+      .in(standardPath)
       .in(jsonBody[CreateFile])
       .out(jsonBody[FileResponse])
       .serverLogicSuccess(fileService.create)
@@ -21,21 +24,21 @@ class FileController[F[_]](fileService: FileService[F]) extends Controller[F] {
   private val listFiles: ServerEndpoint[Any, F] =
     endpoint.get
       .summary("Список файлов по таске")
-      .in("api" / "v1" / "file" / path[TaskId]("taskId"))
+      .in(standardPath / query[TaskId]("task_id"))
       .out(jsonBody[Option[List[FileResponse]]])
       .serverLogicSuccess(fileService.list(_).value)
 
   private val getFile: ServerEndpoint[Any, F] =
     endpoint.get
       .summary("Получить файл")
-      .in("api" / "v1" / "file" / path[FileId]("fileId"))
+      .in(standardPathWithFileId)
       .out(jsonBody[Option[FileResponse]])
       .serverLogicSuccess(fileService.get(_).value)
 
   private val deleteFile: ServerEndpoint[Any, F] =
     endpoint.delete
       .summary("Удалить файл")
-      .in("api" / "v1" / "file" / path[FileId]("fileId"))
+      .in(standardPathWithFileId)
       .out(jsonBody[Option[FileResponse]])
       .serverLogicSuccess(fileService.delete(_).value)
 

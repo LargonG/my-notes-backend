@@ -48,7 +48,7 @@ object Main extends IOApp {
         List(
           UserController.make(UserService.fromRepository(userRepo)),
           TaskController.make(TaskService.fromRepository(boardRepo, groupRepo, taskRepo)),
-          GroupController.make(GroupService.fromRepository(groupRepo)),
+          GroupController.make(GroupService.fromRepository(boardRepo, groupRepo, taskRepo)),
           BoardController.make(BoardService.fromRepository(boardRepo, groupRepo, taskRepo)),
           CommentController.make(CommentService.fromRepository(taskRepo, commentRepo)),
           FileController.make(FileService.fromRepository(taskRepo, fileRepo)),

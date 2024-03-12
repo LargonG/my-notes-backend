@@ -13,7 +13,7 @@ import org.kote.domain.task.Task.TaskId
 import org.kote.repository.{CommentRepository, TaskRepository}
 
 trait CommentService[F[_]] {
-  def create(createComment: CreateComment): F[CommentResponse]
+  def create(createComment: CreateComment): OptionT[F, CommentResponse]
 
   def list(id: TaskId): OptionT[F, List[CommentResponse]]
 
@@ -34,13 +34,13 @@ class RepositoryCommentService[F[_]: UUIDGen: Monad: Clock](
     taskRepository: TaskRepository[F],
     commentRepository: CommentRepository[F],
 ) extends CommentService[F] {
-  override def create(createComment: CreateComment): F[CommentResponse] =
-    for {
+  override def create(createComment: CreateComment): OptionT[F, CommentResponse] =
+    OptionT.liftF(for {
       uuid <- UUIDGen[F].randomUUID
       date <- Clock[F].realTimeInstant
       comment = Comment.fromCreateComment(uuid, date, createComment)
       _ <- commentRepository.create(comment)
-    } yield comment.toResponse
+    } yield comment.toResponse)
 
   override def list(id: TaskId): OptionT[F, List[CommentResponse]] =
     for {

@@ -18,8 +18,8 @@ class FileController[F[_]](fileService: FileService[F]) extends Controller[F] {
       .summary("Создать файл")
       .in(standardPath)
       .in(jsonBody[CreateFile])
-      .out(jsonBody[FileResponse])
-      .serverLogicSuccess(fileService.create)
+      .out(jsonBody[Option[FileResponse]])
+      .serverLogicSuccess(fileService.create(_).value)
 
   private val listFiles: ServerEndpoint[Any, F] =
     endpoint.get

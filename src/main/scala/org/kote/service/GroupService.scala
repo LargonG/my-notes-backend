@@ -13,7 +13,7 @@ import org.kote.repository.{BoardRepository, GroupRepository, TaskRepository}
 import org.kote.repository.GroupRepository.GroupUpdateCommand
 
 trait GroupService[F[_]] {
-  def create(createGroup: CreateGroup): F[GroupResponse]
+  def create(createGroup: CreateGroup): OptionT[F, GroupResponse]
 
   def get(id: GroupId): OptionT[F, GroupResponse]
 
@@ -38,13 +38,13 @@ class RepositoryGroupService[F[_]: UUIDGen: Monad](
     groupRepository: GroupRepository[F],
     taskRepository: TaskRepository[F],
 ) extends GroupService[F] {
-  override def create(createGroup: CreateGroup): F[GroupResponse] =
-    for {
+  override def create(createGroup: CreateGroup): OptionT[F, GroupResponse] =
+    OptionT.liftF(for {
       uuid <- UUIDGen[F].randomUUID
       group = Group.fromCreateGroup(uuid, createGroup)
       _ <- groupRepository.create(group)
       _ <- boardRepository.update(group.parent, BoardRepository.AddGroup(group.id)).value
-    } yield group.toResponse
+    } yield group.toResponse)
 
   override def get(id: GroupId): OptionT[F, GroupResponse] =
     groupRepository.get(id).map(_.toResponse)

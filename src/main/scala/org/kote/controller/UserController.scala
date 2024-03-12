@@ -17,8 +17,8 @@ class UserController[F[_]](userService: UserService[F]) extends Controller[F] {
       .summary("Создать пользователя")
       .in(standardPath)
       .in(jsonBody[CreateUser])
-      .out(jsonBody[UnsafeUserResponse])
-      .serverLogicSuccess(userService.create)
+      .out(jsonBody[Option[UnsafeUserResponse]])
+      .serverLogicSuccess(userService.create(_).value)
 
   private val listUsers: ServerEndpoint[Any, F] =
     endpoint.get

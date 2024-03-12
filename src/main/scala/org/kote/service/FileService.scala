@@ -12,7 +12,7 @@ import org.kote.domain.task.Task.TaskId
 import org.kote.repository.{FileRepository, TaskRepository}
 
 trait FileService[F[_]] {
-  def create(createFile: CreateFile): F[FileResponse]
+  def create(createFile: CreateFile): OptionT[F, FileResponse]
 
   def list(taskId: TaskId): OptionT[F, List[FileResponse]]
 
@@ -33,13 +33,13 @@ class RepositoryFileService[F[_]: UUIDGen: Monad](
     taskRepository: TaskRepository[F],
     fileRepository: FileRepository[F],
 ) extends FileService[F] {
-  override def create(createFile: CreateFile): F[FileResponse] =
-    for {
+  override def create(createFile: CreateFile): OptionT[F, FileResponse] =
+    OptionT.liftF(for {
       uuid <- UUIDGen[F].randomUUID
       file = File.fromCreateFile(uuid, createFile)
       _ <- fileRepository.create(file)
       // todo: update task ??? or create link function?
-    } yield file.toResponse
+    } yield file.toResponse)
 
   override def list(taskId: TaskId): OptionT[F, List[FileResponse]] =
     taskRepository

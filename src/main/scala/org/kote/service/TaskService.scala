@@ -23,7 +23,7 @@ trait TaskService[F[_]] {
     * @return
     *   новую задачу
     */
-  def create(createTask: CreateTask): F[TaskResponse]
+  def create(createTask: CreateTask): OptionT[F, TaskResponse]
 
   def list(boardId: BoardId): OptionT[F, List[TaskResponse]]
 
@@ -53,14 +53,14 @@ class RepositoryTaskService[F[_]: UUIDGen: Monad: Clock](
     taskRepository: TaskRepository[F],
 ) extends TaskService[F] {
 
-  override def create(createTask: CreateTask): F[TaskResponse] =
-    for {
+  override def create(createTask: CreateTask): OptionT[F, TaskResponse] =
+    OptionT.liftF(for {
       uuid <- UUIDGen[F].randomUUID
       time <- Clock[F].realTimeInstant
       task = Task.fromCreateTask(uuid, time, createTask)
       _ <- taskRepository.create(task)
       _ <- groupRepository.update(task.group, GroupRepository.AddTask(task.id)).value
-    } yield task.toResponse
+    } yield task.toResponse)
 
   override def listByStatus(boardId: BoardId, status: Status): OptionT[F, List[TaskResponse]] =
     list(boardId)

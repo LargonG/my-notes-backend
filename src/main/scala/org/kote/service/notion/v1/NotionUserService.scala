@@ -25,8 +25,8 @@ class NotionUserService[F[_]: UUIDGen: MonadThrow: Clock](
     userMainPageIntegration: IntegrationRepository[F, UserId, NotionPageId],
 ) extends UserService[F] {
 
-  override def create(createUser: CreateUser): F[UnsafeUserResponse] =
-    (for {
+  override def create(createUser: CreateUser): OptionT[F, UnsafeUserResponse] =
+    for {
       uuid <- OptionT.liftF(UUIDGen[F].randomUUID)
       date <- OptionT.liftF(Clock[F].realTimeInstant)
       user = User.fromCreateUser(uuid, date, createUser)
@@ -41,8 +41,7 @@ class NotionUserService[F[_]: UUIDGen: MonadThrow: Clock](
       notionPages <- notionPageClient.search(PageSearchRequest(None, None))
       main <- OptionT.fromOption(notionPages.find(_.parent.isInstanceOf[WorkspaceParent]))
       _ <- OptionT.liftF(userMainPageIntegration.set(user.id, main.id))
-    } yield user.toUnsafeResponse(Option(notionUser)))
-      .getOrRaise(throw new IllegalArgumentException())
+    } yield user.toUnsafeResponse(Option(notionUser))
 
   override def update(id: UserId, cmds: List[UserUpdateCommand]): OptionT[F, UnsafeUserResponse] =
     ???

@@ -19,8 +19,8 @@ class CommentController[F[_]](commentService: CommentService[F]) extends Control
       .summary("Создать комментарий")
       .in(standardPath)
       .in(jsonBody[CreateComment])
-      .out(jsonBody[CommentResponse])
-      .serverLogicSuccess(commentService.create)
+      .out(jsonBody[Option[CommentResponse]])
+      .serverLogicSuccess(commentService.create(_).value)
 
   private val listComments: ServerEndpoint[Any, F] =
     endpoint.get

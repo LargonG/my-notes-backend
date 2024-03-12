@@ -19,8 +19,8 @@ class TaskController[F[_]](taskService: TaskService[F]) extends Controller[F] {
       .summary("Создать задачу")
       .in(standardPath)
       .in(jsonBody[CreateTask])
-      .out(jsonBody[TaskResponse])
-      .serverLogicSuccess(taskService.create)
+      .out(jsonBody[Option[TaskResponse]])
+      .serverLogicSuccess(taskService.create(_).value)
 
   private val boardListTasks: ServerEndpoint[Any, F] =
     endpoint.get

@@ -18,8 +18,8 @@ class BoardController[F[_]](boardService: BoardService[F]) extends Controller[F]
       .summary("Создать доску")
       .in(standardPath)
       .in(jsonBody[CreateBoard])
-      .out(jsonBody[BoardResponse])
-      .serverLogicSuccess(boardService.create)
+      .out(jsonBody[Option[BoardResponse]])
+      .serverLogicSuccess(boardService.create(_).value)
 
   private val listBoardsByOwner: ServerEndpoint[Any, F] =
     endpoint.get

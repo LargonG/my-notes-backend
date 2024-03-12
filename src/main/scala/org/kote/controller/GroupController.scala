@@ -18,8 +18,8 @@ class GroupController[F[_]](groupService: GroupService[F]) extends Controller[F]
       .summary("Создать колонку")
       .in(standardPath)
       .in(jsonBody[CreateGroup])
-      .out(jsonBody[GroupResponse])
-      .serverLogicSuccess(groupService.create)
+      .out(jsonBody[Option[GroupResponse]])
+      .serverLogicSuccess(groupService.create(_).value)
 
   private val listGroup: ServerEndpoint[Any, F] =
     endpoint.get

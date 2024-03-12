@@ -39,23 +39,27 @@ class NotionBoardService[F[_]: Monad: UUIDGen](
     propertyIntegration: IntegrationRepository[F, GroupId, PropertyId],
 ) extends BoardService[F] {
 
-  override def create(createBoard: CreateBoard): F[BoardResponse] =
-    (for {
-      uuid <- UUIDGen[F].randomUUID
-      board = Board.fromCreateBoard(uuid, createBoard)
-      _ <- boardRepository.create(board)
-      result <- (for {
-        mainPage <- userMainPageIntegration.getByKey(createBoard.createdBy)
-        response <- notionDatabaseClient.create(CreateBoard.toNotionRequest(createBoard, mainPage))
-        _ <- OptionT.liftF(databaseIntegration.set(board.id, response.id))
-      } yield response).value
-    } yield BoardResponse
-      .fromNotionResponse(result, List.empty)(
-        databaseIntegration,
-        userToUserIntegration,
-        propertyIntegration,
-      )
-      .getOrElse(board.toResponse)).flatten
+  override def create(createBoard: CreateBoard): OptionT[F, BoardResponse] =
+    OptionT(
+      (for {
+        uuid <- UUIDGen[F].randomUUID
+        board = Board.fromCreateBoard(uuid, createBoard)
+        _ <- boardRepository.create(board)
+        result <- (for {
+          mainPage <- userMainPageIntegration.getByKey(createBoard.createdBy)
+          response <- notionDatabaseClient.create(
+            CreateBoard.toNotionRequest(createBoard, mainPage),
+          )
+          _ <- OptionT.liftF(databaseIntegration.set(board.id, response.id))
+        } yield response).value
+      } yield BoardResponse
+        .fromNotionResponse(result, List.empty)(
+          databaseIntegration,
+          userToUserIntegration,
+          propertyIntegration,
+        )
+        .value).flatten,
+    )
 
   override def list(user: User.UserId): F[List[BoardResponse]] =
     (for {

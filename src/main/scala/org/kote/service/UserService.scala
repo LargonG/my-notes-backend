@@ -29,7 +29,7 @@ trait UserService[F[_]] {
     * @return
     *   нового пользователя
     */
-  def create(createUser: CreateUser): F[UnsafeUserResponse]
+  def create(createUser: CreateUser): OptionT[F, UnsafeUserResponse]
 
   // todo: вообще, вызов этого метода не безопасен, так как в случае
   //  обновления trello или notion должна происходить умная логика импорта зависимостей, а её будет
@@ -113,13 +113,13 @@ class RepositoryUserService[F[_]: UUIDGen: Monad: Clock](
     groupRepository: GroupRepository[F],
     taskRepository: TaskRepository[F],
 ) extends UserService[F] {
-  override def create(createUser: CreateUser): F[UnsafeUserResponse] =
-    for {
+  override def create(createUser: CreateUser): OptionT[F, UnsafeUserResponse] =
+    OptionT.liftF(for {
       uuid <- UUIDGen[F].randomUUID
       date <- Clock[F].realTimeInstant
       user = User.fromCreateUser(uuid, date, createUser)
       _ <- userRepository.create(user)
-    } yield user.toUnsafeResponse()
+    } yield user.toUnsafeResponse())
 
   override def update(id: UserId, cmds: List[UserUpdateCommand]): OptionT[F, UnsafeUserResponse] =
     userRepository.update(id, cmds).map(_.toUnsafeResponse())

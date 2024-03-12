@@ -18,7 +18,7 @@ import org.kote.service.notion.v1.{NotionBoardService, PropertyId}
 trait BoardService[F[_]] {
   def create(
       createBoard: CreateBoard,
-  ): F[BoardResponse]
+  ): OptionT[F, BoardResponse]
 
   def list(user: UserId): F[List[BoardResponse]]
 
@@ -64,12 +64,12 @@ class RepositoryBoardService[F[_]: UUIDGen: Monad](
     groupRepository: GroupRepository[F],
     taskRepository: TaskRepository[F],
 ) extends BoardService[F] {
-  override def create(createBoard: CreateBoard): F[BoardResponse] =
-    for {
+  override def create(createBoard: CreateBoard): OptionT[F, BoardResponse] =
+    OptionT.liftF(for {
       uuid <- UUIDGen[F].randomUUID
       board = Board.fromCreateBoard(uuid, createBoard)
       _ <- boardRepository.create(board)
-    } yield board.toResponse
+    } yield board.toResponse)
 
   override def list(user: UserId): F[List[BoardResponse]] =
     boardRepository.list(user).map(_.map(_.toResponse)).getOrElse(List())

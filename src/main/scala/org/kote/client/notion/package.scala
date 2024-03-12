@@ -3,7 +3,8 @@ package org.kote.client
 import cats.data.OptionT
 import cats.implicits.toFunctorOps
 import cats.{Applicative, ApplicativeThrow, Monad}
-import io.circe.{Decoder, Encoder}
+import io.circe.syntax.EncoderOps
+import io.circe.{Decoder, Encoder, Json}
 import org.kote.client.notion.configuration.NotionConfiguration
 import org.kote.client.notion.model.list.PaginatedList
 import org.kote.client.notion.model.list.PaginatedList.Cursor
@@ -87,6 +88,12 @@ package object notion {
     case None        => ""
   }
 
+  private[notion] def optionEncode[T: Encoder](
+      key: String,
+      opt: Option[T],
+  ): Option[(String, Json)] =
+    opt.map(value => key -> value.asJson)
+
   private[notion] def unwrap[F[_]: ApplicativeThrow, T: Decoder]: ResponseAs[F[T], Any] =
     asJsonAlways[T].map(ApplicativeThrow[F].fromEither(_))
 
@@ -103,12 +110,12 @@ package object notion {
   ): F[Option[T]] =
     if (response.isSuccess) {
       response.body.map(Option(_))
-    } else if (response.isServerError) {
+    } else if (response.isServerError || response.code.code == 429) {
       Applicative[F].pure(Option.empty[T])
     } else if (response.isClientError) {
       ApplicativeThrow[F].raiseError(
         new IllegalArgumentException(
-          s"${response.code} ${response.body}",
+          s"${response.code} ${response.statusText} ${response.body}",
         ),
       )
     } else {

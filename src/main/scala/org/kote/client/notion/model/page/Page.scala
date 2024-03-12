@@ -44,7 +44,7 @@ object PageRequest {
 
 case class PageUpdateRequest(
     properties: Map[String, PagePropertyRequest],
-    achieved: Boolean = false,
+    archived: Boolean = false,
 )
 
 object PageUpdateRequest {

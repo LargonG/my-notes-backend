@@ -107,5 +107,5 @@ final class NotionPageHttpClient[F[_]: Async](
     )
 
   override def achieve(pageId: PageId): OptionT[F, PageResponse] =
-    updateProperties(pageId, PageUpdateRequest(Map.empty, achieved = true))
+    updateProperties(pageId, PageUpdateRequest(Map.empty, archived = true))
 }

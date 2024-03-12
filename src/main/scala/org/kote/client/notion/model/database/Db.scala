@@ -1,7 +1,7 @@
 package org.kote.client.notion.model.database
 
 import io.circe.{Decoder, Encoder}
-import org.kote.client.notion.model.page.PageId
+import org.kote.client.notion.model.parent.PageParent
 import org.kote.client.notion.model.text.RichText
 import org.kote.client.notion.model.user.UserResponse
 
@@ -17,7 +17,7 @@ import java.util.UUID
   * @param properties
   *   schema of properties "key" -> {value} - представление страниц в базе (какие значения они
   *   должны иметь в себе)
-  * @param achieved
+  * @param archived
   *   удалена ли
   */
 final case class DbResponse(
@@ -25,13 +25,13 @@ final case class DbResponse(
     createdBy: UserResponse,
     title: List[RichText],
     properties: Map[String, DbPropertyResponse],
-    achieved: Boolean,
+    archived: Boolean,
 )
 // Может потребоваться parent
 
 object DbResponse {
   implicit val dbResponseDecoder: Decoder[DbResponse] =
-    Decoder.forProduct5("id", "created_by", "title", "properties", "achieved")(DbResponse.apply)
+    Decoder.forProduct5("id", "created_by", "title", "properties", "archived")(DbResponse.apply)
 }
 
 /** Запрос создания новой базы данных
@@ -44,7 +44,7 @@ object DbResponse {
   *   данных. Status не может быть задан (ограничение Notion API)
   */
 final case class DbRequest(
-    parent: PageId,
+    parent: PageParent,
     title: Option[List[RichText]],
     properties: Map[String, DbPropertyRequest],
 )

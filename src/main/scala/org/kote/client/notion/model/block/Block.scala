@@ -18,7 +18,7 @@ import java.util.UUID
 case class BlockResponse(
     id: BlockId,
     parent: PageParent,
-    achieved: Boolean,
+    archived: Boolean,
     value: BlockResponseValue,
 )
 
@@ -29,11 +29,11 @@ object BlockResponse {
         id <- cur.get[BlockId]("id")
         parent <- cur.get[PageParent]("parent")
         valueType <- cur.get[BlockType]("type")
-        achieved <- cur.get[Boolean]("achieved")
+        archived <- cur.get[Boolean]("archived")
         value <- valueType match {
           case ParagraphType => cur.get[ParagraphResponse](valueType)
         }
-      } yield BlockResponse(id, parent, achieved, value)
+      } yield BlockResponse(id, parent, archived, value)
     }
 }
 

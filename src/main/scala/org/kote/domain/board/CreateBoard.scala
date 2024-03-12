@@ -3,6 +3,7 @@ package org.kote.domain.board
 import org.kote.client.notion.NotionDatabaseCreateRequest
 import org.kote.client.notion.model.database.{DbPropertyRequest, DbRequest}
 import org.kote.client.notion.model.page.PageId
+import org.kote.client.notion.model.parent.Parent
 import org.kote.client.notion.model.text.RichText
 import org.kote.common.tethys.TethysInstances
 import org.kote.domain.user.User.UserId
@@ -30,7 +31,7 @@ object CreateBoard extends TethysInstances {
 
   def toNotionRequest(request: CreateBoard, mainPage: PageId): NotionDatabaseCreateRequest =
     DbRequest(
-      mainPage,
+      Parent.page(mainPage),
       Some(List(RichText.text(request.title))),
       Map(
         PropertiesNames.titlePropertyName -> DbPropertyRequest.title,

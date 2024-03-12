@@ -5,6 +5,8 @@ import cats.data.OptionT
 import cats.effect.kernel.Clock
 import cats.effect.std.UUIDGen
 import cats.syntax.functor._
+import org.kote.client.notion.model.page.PageSearchRequest
+import org.kote.client.notion.model.parent.WorkspaceParent
 import org.kote.client.notion.{NotionPageClient, NotionPageId, NotionUserClient, NotionUserId}
 import org.kote.domain.user.User.UserId
 import org.kote.domain.user.{CreateUser, UnsafeUserResponse, User, UserResponse}
@@ -12,9 +14,6 @@ import org.kote.repository.UserRepository.UserUpdateCommand
 import org.kote.repository.{IntegrationRepository, UserRepository}
 import org.kote.service.UserService
 
-import scala.annotation.nowarn
-
-@nowarn
 class NotionUserService[F[_]: UUIDGen: MonadThrow: Clock](
     userRepository: UserRepository[F],
 //    boardRepository: BoardRepository[F],
@@ -39,9 +38,9 @@ class NotionUserService[F[_]: UUIDGen: MonadThrow: Clock](
       )
       _ <- OptionT.liftF(userToNotionUserIntegration.set(user.id, notionUser.id))
 
-//      notionPages <- notionPageClient.search(PageSearchRequest(None, None))
-//      main <- OptionT.fromOption(notionPages.find(_.parent.isInstanceOf[WorkspaceParent]))
-//      _ <- OptionT.liftF(userMainPageIntegration.set(user.id, main.id))
+      notionPages <- notionPageClient.search(PageSearchRequest(None, None))
+      main <- OptionT.fromOption(notionPages.find(_.parent.isInstanceOf[WorkspaceParent]))
+      _ <- OptionT.liftF(userMainPageIntegration.set(user.id, main.id))
     } yield user.toUnsafeResponse(Option(notionUser)))
       .getOrRaise(throw new IllegalArgumentException())
 

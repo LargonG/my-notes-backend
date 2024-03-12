@@ -1,5 +1,6 @@
 package org.kote.domain.user
 
+import org.kote.client.notion.NotionUserResponse
 import org.kote.common.tethys.TethysInstances
 import org.kote.domain.user.User.{UserId, UserPassword}
 import sttp.tapir.Schema
@@ -14,8 +15,14 @@ final case class User(
     password: UserPassword,
     registeredIn: Instant,
 ) {
-  def toUnsafeResponse: UnsafeUserResponse =
-    UnsafeUserResponse(id.inner, name, password.inner, registeredIn)
+  def toUnsafeResponse(notionUserResponse: Option[NotionUserResponse] = None): UnsafeUserResponse =
+    UnsafeUserResponse(
+      id.inner,
+      name,
+      password.inner,
+      registeredIn,
+      notionUserResponse.flatMap(_.name),
+    )
 
   def toResponse: UserResponse =
     UserResponse(id.inner, name, registeredIn)

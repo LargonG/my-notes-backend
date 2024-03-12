@@ -14,23 +14,27 @@ sealed trait PropertyType {
 object PropertyType {
   implicit def asString(me: PropertyType): String = me.value
 
-  implicit val encoder: Encoder[PropertyType] =
+  implicit val encoder: Encoder[PropertyType] = {
     Encoder.instance {
       case RichTextType => RichTextType.asJson
-      case SelectType   => SelectType.asJson
-      case StatusType   => StatusType.asJson
-      case TitleType    => TitleType.asJson
-      case PeopleType   => PeopleType.asJson
-      case FilesType    => FilesType.asJson
+      case SelectType => SelectType.asJson
+      case StatusType => StatusType.asJson
+      case TitleType => TitleType.asJson
+      case PeopleType => PeopleType.asJson
+      case FilesType => FilesType.asJson
+      case other @ OtherType(_) => other.asJson
     }
+  }
 
   implicit val decoder: Decoder[PropertyType] =
     List[Decoder[PropertyType]](
       Decoder[RichTextType.type].widen,
       Decoder[SelectType.type].widen,
+      Decoder[StatusType.type].widen,
       Decoder[TitleType.type].widen,
       Decoder[PeopleType.type].widen,
       Decoder[FilesType.type].widen,
+      Decoder[OtherType].widen
     ).reduceLeft(_ or _)
 }
 
@@ -92,4 +96,13 @@ case object FilesType extends PropertyType {
 
   implicit val decoder: Decoder[FilesType.type] =
     decodeType(value, _ => FilesType)
+}
+
+case class OtherType(override val value: String) extends PropertyType
+object OtherType {
+  implicit val encoder: Encoder[OtherType] =
+    Encoder.encodeString.contramap(_.value)
+
+  implicit val decoder: Decoder[OtherType] =
+    Decoder.decodeString.map(OtherType.apply)
 }

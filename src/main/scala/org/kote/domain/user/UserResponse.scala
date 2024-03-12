@@ -42,6 +42,7 @@ final case class UnsafeUserResponse(
     name: String,
     password: String,
     registeredIn: Instant,
+    notionUserName: Option[String],
 )
 
 object UnsafeUserResponse extends TethysInstances {

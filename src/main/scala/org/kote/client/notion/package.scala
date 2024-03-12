@@ -80,7 +80,12 @@ package object notion {
   // Версии api //
   ////////////////
 
-  private[notion] val v1 = "api/v1"
+  private[notion] val v1 = "v1"
+
+  private[notion] def optionToString[T](opt: Option[T]): String = opt match {
+    case Some(value) => value.toString
+    case None        => ""
+  }
 
   private[notion] def unwrap[F[_]: ApplicativeThrow, T: Decoder]: ResponseAs[F[T], Any] =
     asJsonAlways[T].map(ApplicativeThrow[F].fromEither(_))
@@ -101,7 +106,11 @@ package object notion {
     } else if (response.isServerError) {
       Applicative[F].pure(Option.empty[T])
     } else if (response.isClientError) {
-      ApplicativeThrow[F].raiseError(new IllegalArgumentException())
+      ApplicativeThrow[F].raiseError(
+        new IllegalArgumentException(
+          s"${response.code} ${response.body}",
+        ),
+      )
     } else {
       ApplicativeThrow[F].raiseError(new IllegalStateException())
     }
@@ -133,7 +142,7 @@ package object notion {
               } yield Cursor(next, prev.pageSize),
             )
           else
-            OptionT.pure[F](acc.reverse),
+            OptionT.pure[F]((response.results :: acc).reverse),
         )
         .orElse(
           if (acc.nonEmpty) OptionT.pure[F](acc.reverse)

@@ -72,6 +72,12 @@ object Main extends IOApp {
         val notionDatabaseClient: NotionDatabaseClient[IO] =
           NotionDatabaseClient.http(backend, config)
 
+        val notionPageClient: NotionPageClient[IO] =
+          NotionPageClient.http(backend, config)
+
+        val notionUserClient: NotionUserClient[IO] =
+          NotionUserClient.http(backend, config)
+
         val userRepo = UserRepository.inMemory(userCache)
         val taskRepo = TaskRepository.inMemory(taskCache)
         val groupRepo = GroupRepository.inMemory(groupCache)
@@ -90,7 +96,15 @@ object Main extends IOApp {
           IntegrationRepository.inMemory(groupProperty, propertyGroup)
 
         List(
-          UserController.make(UserService.fromRepository(userRepo, boardRepo, groupRepo, taskRepo)),
+          UserController.make(
+            UserService.syncNotion(
+              userRepo,
+              notionUserClient,
+              notionPageClient,
+              userToNotionUserIntegration,
+              userMainPageIntegration,
+            ),
+          ),
           TaskController.make(TaskService.fromRepository(boardRepo, groupRepo, taskRepo)),
           GroupController.make(GroupService.fromRepository(boardRepo, groupRepo, taskRepo)),
           BoardController.make(
@@ -139,7 +153,7 @@ object Main extends IOApp {
       .rethrowT
 
   private def getNotionApiKey[F[_]: Env: MonadThrow]: F[String] =
-    OptionT(Env[F].get("NOTION_API_KEY"))
+    OptionT(Env[F].get("NOTION_KEY"))
       .toRight("NOTION_API_KEY not found")
       .leftMap(new IllegalArgumentException(_))
       .rethrowT

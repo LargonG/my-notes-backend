@@ -22,7 +22,7 @@ case class PaginatedList[T](
 )
 
 object PaginatedList {
-  final case class Cursor(value: String, pageSize: Int = 32)
+  final case class Cursor(value: String, pageSize: Int = 100)
 
   object Cursor {
     implicit val cursorEncoder: Encoder[Cursor] = Encoder.forProduct2("start_cursor", "page_size") {

@@ -34,12 +34,17 @@ object DbPropertyResponse {
           case StatusType   => cursor.get[DbStatusPropertyResponse](valueType)
           case TitleType    => cursor.get[DbTitlePropertyResponse.type](valueType)
           case SelectType   => cursor.get[DbSelectPropertyResponse](valueType)
+          case OtherType(_) => cursor.get[DbOtherPropertyResponse.type](valueType)
         }
       } yield DbPropertyResponse(id, name, value)
     }
 }
 
 sealed trait DbPropertyValueResponse
+
+case object DbOtherPropertyResponse extends DbPropertyValueResponse {
+  implicit val dbOtherPropertyResponseDecoder: Decoder[DbOtherPropertyResponse.type] = deriveDecoder
+}
 
 /** Колонка хранения файлов */
 case object DbFilesPropertyResponse extends DbPropertyValueResponse {

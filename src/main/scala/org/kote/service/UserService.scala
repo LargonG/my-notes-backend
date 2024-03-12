@@ -1,16 +1,24 @@
 package org.kote.service
 
-import cats.Monad
+import cats.{Monad, MonadThrow}
 import cats.data.OptionT
 import cats.effect.kernel.Clock
 import cats.effect.std.UUIDGen
 import cats.implicits.toTraverseOps
 import cats.syntax.flatMap._
 import cats.syntax.functor._
+import org.kote.client.notion.{NotionPageClient, NotionPageId, NotionUserClient, NotionUserId}
 import org.kote.domain.user.User.UserId
 import org.kote.domain.user.{CreateUser, UnsafeUserResponse, User, UserResponse}
-import org.kote.repository.{BoardRepository, GroupRepository, TaskRepository, UserRepository}
+import org.kote.repository.{
+  BoardRepository,
+  GroupRepository,
+  IntegrationRepository,
+  TaskRepository,
+  UserRepository,
+}
 import org.kote.repository.UserRepository.UserUpdateCommand
+import org.kote.service.notion.v1.NotionUserService
 
 trait UserService[F[_]] {
 
@@ -82,6 +90,21 @@ object UserService {
       taskRepository: TaskRepository[F],
   ): UserService[F] =
     new RepositoryUserService[F](userRepository, boardRepository, groupRepository, taskRepository)
+
+  def syncNotion[F[_]: UUIDGen: MonadThrow: Clock](
+      userRepository: UserRepository[F],
+      notionUserClient: NotionUserClient[F],
+      notionPageClient: NotionPageClient[F],
+      userToNotionUserIntegration: IntegrationRepository[F, UserId, NotionUserId],
+      userMainPageIntegration: IntegrationRepository[F, UserId, NotionPageId],
+  ): UserService[F] =
+    new NotionUserService[F](
+      userRepository,
+      notionUserClient,
+      notionPageClient,
+      userToNotionUserIntegration,
+      userMainPageIntegration,
+    )
 }
 
 class RepositoryUserService[F[_]: UUIDGen: Monad: Clock](
@@ -96,10 +119,10 @@ class RepositoryUserService[F[_]: UUIDGen: Monad: Clock](
       date <- Clock[F].realTimeInstant
       user = User.fromCreateUser(uuid, date, createUser)
       _ <- userRepository.create(user)
-    } yield user.toUnsafeResponse
+    } yield user.toUnsafeResponse()
 
   override def update(id: UserId, cmds: List[UserUpdateCommand]): OptionT[F, UnsafeUserResponse] =
-    userRepository.update(id, cmds).map(_.toUnsafeResponse)
+    userRepository.update(id, cmds).map(_.toUnsafeResponse())
 
   override def list: F[List[UserResponse]] =
     userRepository.all.map(_.map(_.toResponse))
@@ -108,7 +131,7 @@ class RepositoryUserService[F[_]: UUIDGen: Monad: Clock](
     userRepository.get(id).map(_.toResponse)
 
   override def unsafeGet(id: UserId): OptionT[F, UnsafeUserResponse] =
-    userRepository.get(id).map(_.toUnsafeResponse)
+    userRepository.get(id).map(_.toUnsafeResponse())
 
   override def delete(id: UserId): OptionT[F, UnsafeUserResponse] =
     for {
@@ -119,5 +142,5 @@ class RepositoryUserService[F[_]: UUIDGen: Monad: Clock](
       groups <- groupIds.traverse(groupRepository.delete)
       taskIds = groups.flatMap(_.tasks)
       _ <- taskIds.traverse(taskRepository.delete)
-    } yield deleted.toUnsafeResponse
+    } yield deleted.toUnsafeResponse()
 }

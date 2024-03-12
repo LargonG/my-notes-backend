@@ -2,7 +2,7 @@ package org.kote.client.notion.model.page
 
 import io.circe.{Decoder, Encoder}
 import org.kote.client.notion.model.block.BlockRequest
-import org.kote.client.notion.model.parent.DatabaseParent
+import org.kote.client.notion.model.parent.{DatabaseParent, Parent}
 import org.kote.client.notion.model.user.UserResponse
 
 import java.util.UUID
@@ -11,14 +11,14 @@ import java.util.UUID
 final case class PageResponse(
     id: PageId,
     createdBy: UserResponse,
-    achieved: Boolean,
+    parent: Parent,
+    archived: Boolean,
     properties: Map[String, PagePropertyResponse],
-    parent: DatabaseParent,
 )
 
 object PageResponse {
   implicit val pageResponseDecoder: Decoder[PageResponse] =
-    Decoder.forProduct5("id", "created_by", "achieved", "properties", "parent")(PageResponse.apply)
+    Decoder.forProduct5("id", "created_by", "parent", "archived", "properties")(PageResponse.apply)
 }
 
 /** Запрос создания страницы прикреплённой к какой-то базе данных

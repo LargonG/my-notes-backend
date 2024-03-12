@@ -36,11 +36,11 @@ final class NotionUserHttpClient[F[_]: Async](
     def tick(cursor: Option[Cursor]): OptionT[F, PaginatedList[UserResponse]] =
       OptionT(
         basicRequestWithHeaders
-          .get(uri"$users?$cursor")
+          .get(uri"$users?${optionToString(cursor)}")
           .response(notion.unwrap[F, PaginatedList[UserResponse]])
           .readTimeout(config.timeout)
           .send(sttpBackend)
-          .flatMap(optionIfSuccess(_)),
+          .flatMap(response => optionIfSuccess(response)),
       )
 
     concatPaginatedLists(tick)

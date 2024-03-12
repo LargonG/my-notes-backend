@@ -9,6 +9,7 @@ import scala.annotation.nowarn
 final case class CreateUser(
     name: String,
     password: String,
+    notionUserName: String,
 )
 
 object CreateUser {

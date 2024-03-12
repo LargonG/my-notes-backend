@@ -78,6 +78,9 @@ object BlockRequest {
         asString(source.value.toType) -> source.value.asJson,
       )
     }
+
+  def paragraph(list: List[RichText]): BlockRequest =
+    BlockRequest(ParagraphRequest(list))
 }
 
 /////////////////////

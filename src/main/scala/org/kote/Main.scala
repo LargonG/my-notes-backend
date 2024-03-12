@@ -8,8 +8,8 @@ import com.comcast.ip4s.{Host, Port}
 import org.asynchttpclient.DefaultAsyncHttpClient
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.server.Router
-import org.kote.client.notion.NotionDatabaseClient
 import org.kote.client.notion.configuration.NotionConfiguration
+import org.kote.client.notion._
 import org.kote.common.cache.Cache
 import org.kote.controller._
 import org.kote.domain.board.Board
@@ -26,13 +26,13 @@ import org.kote.domain.user.User
 import org.kote.domain.user.User.UserId
 import org.kote.repository._
 import org.kote.service._
+import org.kote.service.notion.v1.PropertyId
 import sttp.client3.SttpBackend
 import sttp.client3.asynchttpclient.cats.AsyncHttpClientCatsBackend
 import sttp.tapir.server.http4s.Http4sServerInterpreter
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
 
 import java.nio.charset.StandardCharsets
-import scala.annotation.unused
 import scala.concurrent.duration.DurationInt
 
 object Main extends IOApp {
@@ -44,6 +44,18 @@ object Main extends IOApp {
       boardCache <- Cache.ram[IO, BoardId, Board]
       commentCache <- Cache.ram[IO, CommentId, Comment]
       fileCache <- Cache.disk[IO, FileId, File]("files", StandardCharsets.UTF_8)
+
+      boardDb <- Cache.ram[IO, BoardId, NotionDatabaseId]
+      dbBoard <- Cache.ram[IO, NotionDatabaseId, BoardId]
+
+      userPage <- Cache.ram[IO, UserId, NotionPageId]
+      pageUser <- Cache.ram[IO, NotionPageId, UserId]
+
+      userToNotionUser <- Cache.ram[IO, UserId, NotionUserId]
+      notionUserToUser <- Cache.ram[IO, NotionUserId, UserId]
+
+      groupProperty <- Cache.ram[IO, GroupId, PropertyId]
+      propertyGroup <- Cache.ram[IO, PropertyId, GroupId]
 
       notionApiKey <- getNotionApiKey[IO].orElse(IO.pure(""))
       endpoints <- IO.delay {
@@ -57,8 +69,7 @@ object Main extends IOApp {
           timeout = 10.seconds,
         )
 
-        @unused
-        val databaseNotionClient: NotionDatabaseClient[IO] =
+        val notionDatabaseClient: NotionDatabaseClient[IO] =
           NotionDatabaseClient.http(backend, config)
 
         val userRepo = UserRepository.inMemory(userCache)
@@ -71,11 +82,29 @@ object Main extends IOApp {
         val commentRepo = CommentRepository.inMemory(commentCache)
         val fileRepo = FileRepository.inMemory(fileCache)
 
+        val databaseIntegration = IntegrationRepository.inMemory(boardDb, dbBoard)
+        val userMainPageIntegration = IntegrationRepository.inMemory(userPage, pageUser)
+        val userToNotionUserIntegration =
+          IntegrationRepository.inMemory(userToNotionUser, notionUserToUser)
+        val groupToPropertyIntegration =
+          IntegrationRepository.inMemory(groupProperty, propertyGroup)
+
         List(
           UserController.make(UserService.fromRepository(userRepo, boardRepo, groupRepo, taskRepo)),
           TaskController.make(TaskService.fromRepository(boardRepo, groupRepo, taskRepo)),
           GroupController.make(GroupService.fromRepository(boardRepo, groupRepo, taskRepo)),
-          BoardController.make(BoardService.fromRepository(boardRepo, groupRepo, taskRepo)),
+          BoardController.make(
+            BoardService.syncNotion(
+              boardRepo,
+              groupRepo,
+              taskRepo,
+              notionDatabaseClient,
+              databaseIntegration,
+              userMainPageIntegration,
+              userToNotionUserIntegration,
+              groupToPropertyIntegration,
+            ),
+          ),
           CommentController.make(CommentService.fromRepository(taskRepo, commentRepo)),
           FileController.make(FileService.fromRepository(taskRepo, fileRepo)),
         ).flatMap(_.endpoints)

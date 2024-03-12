@@ -24,6 +24,24 @@ object DbPropertyRequest {
     case DbTitlePropertyRequest              => DbTitlePropertyRequest.asJson
     case select @ DbSelectPropertyRequest(_) => select.asJson
   }
+
+  def files: DbFilesPropertyRequest.type =
+    DbFilesPropertyRequest
+
+  def people: DbPeoplePropertyRequest.type =
+    DbPeoplePropertyRequest
+
+  def richText: DbRichTextPropertyRequest.type =
+    DbRichTextPropertyRequest
+
+  def title: DbRichTextPropertyRequest.type =
+    DbRichTextPropertyRequest
+
+  def select(options: List[SelectOption]): DbSelectPropertyRequest =
+    DbSelectPropertyRequest(options)
+
+  def selectOption(name: String): DbSelectPropertyRequest.SelectOption =
+    SelectOption(name)
 }
 
 case object DbFilesPropertyRequest extends DbPropertyRequest {

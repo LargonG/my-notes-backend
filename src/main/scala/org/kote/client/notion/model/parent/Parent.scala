@@ -6,6 +6,12 @@ import org.kote.client.notion.model.page.PageId
 
 sealed trait Parent
 
+object Parent {
+  def db(id: DbId): DatabaseParent = DatabaseParent(id)
+
+  def page(id: PageId): PageParent = PageParent(id)
+}
+
 final case class DatabaseParent(id: DbId) extends Parent
 
 object DatabaseParent {

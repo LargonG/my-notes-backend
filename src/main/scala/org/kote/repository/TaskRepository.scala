@@ -3,9 +3,6 @@ package org.kote.repository
 import cats.Monad
 import cats.data.OptionT
 import cats.effect.kernel.Clock
-import org.kote.adapter.Adapter
-import org.kote.client.notion._
-import org.kote.client.notion.model.page.NotionPageFullResponse
 import org.kote.common.cache.Cache
 import org.kote.domain.board.Board.BoardId
 import org.kote.domain.comment.Comment.CommentId
@@ -16,7 +13,6 @@ import org.kote.domain.task.Task.{Status, TaskId}
 import org.kote.domain.user.User.UserId
 import org.kote.repository.TaskRepository.TaskUpdateCommand
 import org.kote.repository.inmemory.InMemoryTaskRepository
-import org.kote.repository.notion.NotionTaskRepository
 
 /** Описывает хранилище задач
   * @tparam F
@@ -44,12 +40,4 @@ object TaskRepository {
 
   def inMemory[F[_]: Monad: Clock](cache: Cache[F, TaskId, Task]): TaskRepository[F] =
     new InMemoryTaskRepository[F](cache)
-
-  def notion[F[_]: Monad](
-      pageClient: NotionPageClient[F],
-      blockClient: NotionBlockClient[F],
-  )(implicit
-      taskAdapter: Adapter[Task, NotionPageCreateRequest, NotionPageFullResponse],
-      idAdapter: Adapter[TaskId, NotionPageId, NotionPageId],
-  ) = new NotionTaskRepository[F](pageClient, blockClient)
 }

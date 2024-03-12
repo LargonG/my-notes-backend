@@ -55,6 +55,10 @@ object File {
       Decoder[ExternalFile].widen,
       Decoder[NotionFile].widen,
     ).reduceLeft(_ or _)
+
+  def external(url: URL): ExternalFile = ExternalFile(url)
+
+  def notion(url: URL, expiryTime: Option[Instant]): NotionFile = NotionFile(url, expiryTime)
 }
 
 final case class ExternalFile(url: URL) extends File
@@ -64,7 +68,7 @@ object ExternalFile {
   implicit val externalFileDecoder: Decoder[ExternalFile] = deriveDecoder
 }
 
-final case class NotionFile(url: URL, expiryTime: Instant) extends File
+final case class NotionFile(url: URL, expiryTime: Option[Instant]) extends File
 
 object NotionFile {
   implicit val notionFileEncoder: Encoder[NotionFile] =

@@ -19,6 +19,24 @@ object PagePropertyRequest {
       case select @ PageSelectPropertyRequest(_)     => Json.obj("select" -> select.asJson)
       case title @ PageTitlePropertyRequest(_)       => Json.obj("title" -> title.asJson)
     }
+
+  def files(list: List[FileHeader]): PageFilesPropertyRequest =
+    PageFilesPropertyRequest(list)
+
+  def people(list: List[UserRequest]): PagePeoplePropertyRequest =
+    PagePeoplePropertyRequest(list)
+
+  def richText(list: List[RichText]): PageRichTextPropertyRequest =
+    PageRichTextPropertyRequest(list)
+
+  def status(name: String): PageStatusPropertyRequest =
+    PageStatusPropertyRequest(name)
+
+  def select(name: String): PageSelectPropertyRequest =
+    PageSelectPropertyRequest(name)
+
+  def title(list: List[RichText]): PageTitlePropertyRequest =
+    PageTitlePropertyRequest(list)
 }
 
 final case class PageFilesPropertyRequest(files: List[FileHeader]) extends PagePropertyRequest

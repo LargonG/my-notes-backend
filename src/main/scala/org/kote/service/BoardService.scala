@@ -6,11 +6,14 @@ import cats.effect.std.UUIDGen
 import cats.implicits.toTraverseOps
 import cats.syntax.flatMap._
 import cats.syntax.functor._
+import org.kote.client.notion.{NotionDatabaseClient, NotionDatabaseId, NotionPageId, NotionUserId}
 import org.kote.domain.board.Board.BoardId
 import org.kote.domain.board.{Board, BoardResponse, CreateBoard}
+import org.kote.domain.group.Group.GroupId
 import org.kote.domain.user.User.UserId
 import org.kote.repository.BoardRepository.BoardUpdateCommand
-import org.kote.repository.{BoardRepository, GroupRepository, TaskRepository}
+import org.kote.repository.{BoardRepository, GroupRepository, IntegrationRepository, TaskRepository}
+import org.kote.service.notion.v1.{NotionBoardService, PropertyId}
 
 trait BoardService[F[_]] {
   def create(
@@ -33,6 +36,27 @@ object BoardService {
       taskRepository: TaskRepository[F],
   ): BoardService[F] =
     new RepositoryBoardService[F](boardRepository, groupRepository, taskRepository)
+
+  def syncNotion[F[_]: UUIDGen: Monad](
+      boardRepository: BoardRepository[F],
+      groupRepository: GroupRepository[F],
+      taskRepository: TaskRepository[F],
+      notionDatabaseClient: NotionDatabaseClient[F],
+      databaseIntegration: IntegrationRepository[F, BoardId, NotionDatabaseId],
+      userMainPageIntegration: IntegrationRepository[F, UserId, NotionPageId],
+      userToUserIntegration: IntegrationRepository[F, UserId, NotionUserId],
+      propertyIntegration: IntegrationRepository[F, GroupId, PropertyId],
+  ): BoardService[F] =
+    new NotionBoardService[F](
+      boardRepository,
+      groupRepository,
+      taskRepository,
+      notionDatabaseClient,
+      databaseIntegration,
+      userMainPageIntegration,
+      userToUserIntegration,
+      propertyIntegration,
+    )
 }
 
 class RepositoryBoardService[F[_]: UUIDGen: Monad](

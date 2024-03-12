@@ -29,5 +29,5 @@ object Board {
   }
 
   def fromCreateBoard(uuid: UUID, createBoard: CreateBoard): Board =
-    Board(BoardId(uuid), createBoard.title, createBoard.owner, List())
+    Board(BoardId(uuid), createBoard.title, createBoard.createdBy, List())
 }

@@ -14,10 +14,12 @@ object RichText {
   implicit val richTextDecoder: Decoder[RichText] = List[Decoder[RichText]](
     Decoder[Text].widen,
   ).reduceLeft(_ or _)
+
+  def text(content: String): Text = Text(content)
 }
 
 final case class Text(
-    plainText: String,
+    content: String,
 ) extends RichText
 
 object Text {
@@ -26,7 +28,7 @@ object Text {
       Json.obj(
         "type" -> "text".asJson,
         "text" -> Json.obj(
-          "content" -> source.plainText.asJson,
+          "content" -> source.content.asJson,
         ),
       )
     }

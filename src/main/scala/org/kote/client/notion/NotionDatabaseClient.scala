@@ -128,14 +128,24 @@ final class NotionDatabaseHttpClient[F[_]: Async](
   override def list(id: DbId): OptionT[F, List[PageResponse]] = {
     def tick(cursor: Option[Cursor]): OptionT[F, PaginatedList[PageResponse]] =
       OptionT(
-        basicRequestWithHeaders
-          .post(uri"$databases/$id/query")
-          .body(cursor)
-          .response(unwrap[F, PaginatedList[PageResponse]])
-          .readTimeout(config.timeout)
-          .send(sttpBackend)
-          .map(optionIfSuccess(_))
-          .flatten,
+        if (cursor.isEmpty) { // 10 минут требуют быстрых решений
+          basicRequestWithHeaders
+            .post(uri"$databases/$id/query")
+            .response(unwrap[F, PaginatedList[PageResponse]])
+            .readTimeout(config.timeout)
+            .send(sttpBackend)
+            .map(optionIfSuccess(_))
+            .flatten
+        } else {
+          basicRequestWithHeaders
+            .post(uri"$databases/$id/query")
+            .body(cursor)
+            .response(unwrap[F, PaginatedList[PageResponse]])
+            .readTimeout(config.timeout)
+            .send(sttpBackend)
+            .map(optionIfSuccess(_))
+            .flatten
+        },
       )
 
     concatPaginatedLists(tick)

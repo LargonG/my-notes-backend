@@ -93,6 +93,9 @@ object UserService {
 
   def syncNotion[F[_]: UUIDGen: MonadThrow: Clock](
       userRepository: UserRepository[F],
+      boardRepository: BoardRepository[F],
+      groupRepository: GroupRepository[F],
+      taskRepository: TaskRepository[F],
       notionUserClient: NotionUserClient[F],
       notionPageClient: NotionPageClient[F],
       userToNotionUserIntegration: IntegrationRepository[F, UserId, NotionUserId],
@@ -100,6 +103,9 @@ object UserService {
   ): UserService[F] =
     new NotionUserService[F](
       userRepository,
+      boardRepository,
+      groupRepository,
+      taskRepository,
       notionUserClient,
       notionPageClient,
       userToNotionUserIntegration,

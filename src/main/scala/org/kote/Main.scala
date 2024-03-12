@@ -99,6 +99,9 @@ object Main extends IOApp {
           UserController.make(
             UserService.syncNotion(
               userRepo,
+              boardRepo,
+              groupRepo,
+              taskRepo,
               notionUserClient,
               notionPageClient,
               userToNotionUserIntegration,

@@ -11,14 +11,21 @@ import org.kote.client.notion.{NotionPageClient, NotionPageId, NotionUserClient,
 import org.kote.domain.user.User.UserId
 import org.kote.domain.user.{CreateUser, UnsafeUserResponse, User, UserResponse}
 import org.kote.repository.UserRepository.UserUpdateCommand
-import org.kote.repository.{IntegrationRepository, UserRepository}
+import org.kote.repository.{
+  BoardRepository,
+  GroupRepository,
+  IntegrationRepository,
+  TaskRepository,
+  UserRepository,
+}
 import org.kote.service.UserService
+import cats.implicits.toTraverseOps
 
 class NotionUserService[F[_]: UUIDGen: MonadThrow: Clock](
     userRepository: UserRepository[F],
-//    boardRepository: BoardRepository[F],
-//    groupRepository: GroupRepository[F],
-//    taskRepository: TaskRepository[F],
+    boardRepository: BoardRepository[F],
+    groupRepository: GroupRepository[F],
+    taskRepository: TaskRepository[F],
     notionUserClient: NotionUserClient[F],
     notionPageClient: NotionPageClient[F],
     userToNotionUserIntegration: IntegrationRepository[F, UserId, NotionUserId],
@@ -44,8 +51,7 @@ class NotionUserService[F[_]: UUIDGen: MonadThrow: Clock](
     } yield user.toUnsafeResponse(Option(notionUser))
 
   override def update(id: UserId, cmds: List[UserUpdateCommand]): OptionT[F, UnsafeUserResponse] =
-    ???
-//    userRepository.update(id, cmds).map(_.toUnsafeResponse)
+    userRepository.update(id, cmds).map(_.toUnsafeResponse())
 
   override def list: F[List[UserResponse]] =
     userRepository.all.map(_.map(_.toResponse))
@@ -53,16 +59,17 @@ class NotionUserService[F[_]: UUIDGen: MonadThrow: Clock](
   override def get(id: UserId): OptionT[F, UserResponse] =
     userRepository.get(id).map(_.toResponse)
 
-  override def unsafeGet(id: UserId): OptionT[F, UnsafeUserResponse] = ???
+  override def unsafeGet(id: UserId): OptionT[F, UnsafeUserResponse] =
+    userRepository.get(id).map(_.toUnsafeResponse())
 
-  override def delete(id: UserId): OptionT[F, UnsafeUserResponse] = ???
-//    for {
-//      deleted <- userRepository.delete(id)
-//      boards <- boardRepository.list(deleted.id)
-//      _ <- boards.traverse(board => boardRepository.delete(board.id))
-//      groupIds = boards.flatMap(_.groups)
-//      groups <- groupIds.traverse(groupRepository.delete)
-//      taskIds = groups.flatMap(_.tasks)
-//      _ <- taskIds.traverse(taskRepository.delete)
-//    } yield deleted.toUnsafeResponse
+  override def delete(id: UserId): OptionT[F, UnsafeUserResponse] =
+    for {
+      deleted <- userRepository.delete(id)
+      boards <- boardRepository.list(deleted.id)
+      _ <- boards.traverse(board => boardRepository.delete(board.id))
+      groupIds = boards.flatMap(_.groups)
+      groups <- groupIds.traverse(groupRepository.delete)
+      taskIds = groups.flatMap(_.tasks)
+      _ <- taskIds.traverse(taskRepository.delete)
+    } yield deleted.toUnsafeResponse()
 }

@@ -5,8 +5,6 @@ import cats.data.OptionT
 import cats.effect.kernel.Clock
 import cats.effect.std.UUIDGen
 import cats.syntax.functor._
-import org.kote.client.notion.model.page.PageSearchRequest
-import org.kote.client.notion.model.parent.WorkspaceParent
 import org.kote.client.notion.{NotionPageClient, NotionPageId, NotionUserClient, NotionUserId}
 import org.kote.domain.user.User.UserId
 import org.kote.domain.user.{CreateUser, UnsafeUserResponse, User, UserResponse}

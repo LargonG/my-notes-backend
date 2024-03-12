@@ -54,7 +54,6 @@ lazy val root = (project in file("."))
       "com.softwaremill.sttp.tapir" %% "tapir-sttp-stub-server" % tapirVersion % Test,
       "org.scalatest" %% "scalatest" % scalatestVersion % Test,
       "org.scalamock" %% "scalamock" % scalamockVersion % Test,
-
       "org.typelevel" %% "cats-effect-testing-scalatest" % testVersion % Test,
       "com.github.cb372" %% "cats-retry" % catsRetryVersion,
       "org.typelevel" %% "log4cats-core" % catsLoggingVersion,

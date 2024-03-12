@@ -14,17 +14,16 @@ sealed trait PropertyType {
 object PropertyType {
   implicit def asString(me: PropertyType): String = me.value
 
-  implicit val encoder: Encoder[PropertyType] = {
+  implicit val encoder: Encoder[PropertyType] =
     Encoder.instance {
-      case RichTextType => RichTextType.asJson
-      case SelectType => SelectType.asJson
-      case StatusType => StatusType.asJson
-      case TitleType => TitleType.asJson
-      case PeopleType => PeopleType.asJson
-      case FilesType => FilesType.asJson
+      case RichTextType         => RichTextType.asJson
+      case SelectType           => SelectType.asJson
+      case StatusType           => StatusType.asJson
+      case TitleType            => TitleType.asJson
+      case PeopleType           => PeopleType.asJson
+      case FilesType            => FilesType.asJson
       case other @ OtherType(_) => other.asJson
     }
-  }
 
   implicit val decoder: Decoder[PropertyType] =
     List[Decoder[PropertyType]](
@@ -34,7 +33,7 @@ object PropertyType {
       Decoder[TitleType.type].widen,
       Decoder[PeopleType.type].widen,
       Decoder[FilesType.type].widen,
-      Decoder[OtherType].widen
+      Decoder[OtherType].widen,
     ).reduceLeft(_ or _)
 }
 

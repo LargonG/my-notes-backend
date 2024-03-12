@@ -8,7 +8,7 @@ import org.scalatest.freespec.AsyncFreeSpec
 import org.scalatest.matchers.should.Matchers
 
 class NotionUserClientSpec
-  extends AsyncFreeSpec
+    extends AsyncFreeSpec
     with AsyncIOSpec
     with Matchers
     with OrderServiceImplSpecUtils {
@@ -16,7 +16,9 @@ class NotionUserClientSpec
   "users" - {
     "list" in {
       client.list
-        .asserting(_ shouldNot be(List.empty)).value.map(_.getOrElse(scalatest.Assertions.fail()))
+        .asserting(_ shouldNot be(List.empty))
+        .value
+        .map(_.getOrElse(scalatest.Assertions.fail()))
     }
   }
 }

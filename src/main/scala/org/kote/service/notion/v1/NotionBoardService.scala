@@ -7,7 +7,15 @@ import cats.implicits.{toFlatMapOps, toTraverseOps}
 import cats.syntax.functor._
 import org.kote.client.notion.model.database.{DbSearchRequest, DbUpdateRequest}
 import org.kote.client.notion._
-import org.kote.client.notion.model.page.{PageFilesPropertyResponse, PageOtherPropertyResponseValue, PagePeoplePropertyResponse, PageRichTextPropertyResponse, PageSelectPropertyResponse, PageStatusPropertyResponse, PageTitlePropertyResponse}
+import org.kote.client.notion.model.page.{
+  PageFilesPropertyResponse,
+  PageOtherPropertyResponseValue,
+  PagePeoplePropertyResponse,
+  PageRichTextPropertyResponse,
+  PageSelectPropertyResponse,
+  PageStatusPropertyResponse,
+  PageTitlePropertyResponse,
+}
 import org.kote.client.notion.model.text.RichText
 import org.kote.domain.board.Board.BoardId
 import org.kote.domain.board.{Board, BoardResponse, CreateBoard}
@@ -119,15 +127,16 @@ class NotionBoardService[F[_]: Monad: UUIDGen](
             value <- page.properties
               .get(key)
               .flatMap(_.value match {
-                case Some(value) => value match {
-                  case PageFilesPropertyResponse(_) => None
-                  case PagePeoplePropertyResponse(_) => None
-                  case PageRichTextPropertyResponse(text) => Some(text.mkString)
-                  case PageStatusPropertyResponse(_, _) => None
-                  case PageTitlePropertyResponse(_) => None
-                  case PageSelectPropertyResponse(_, _) => None
-                  case PageOtherPropertyResponseValue => None
-                }
+                case Some(value) =>
+                  value match {
+                    case PageFilesPropertyResponse(_)       => None
+                    case PagePeoplePropertyResponse(_)      => None
+                    case PageRichTextPropertyResponse(text) => Some(text.mkString)
+                    case PageStatusPropertyResponse(_, _)   => None
+                    case PageTitlePropertyResponse(_)       => None
+                    case PageSelectPropertyResponse(_, _)   => None
+                    case PageOtherPropertyResponseValue     => None
+                  }
                 case None => None
               })
           } yield PropertyId(key, name, value)

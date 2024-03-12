@@ -16,6 +16,6 @@ trait ClientUtils {
     "secret_TRstxQadmcWlZbRwXUlr2WZdTujLi2F1AGb1CLEFTyw",
     "2022-06-28",
     "https://api.notion.com",
-    10.seconds
+    10.seconds,
   )
 }

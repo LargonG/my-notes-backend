@@ -37,7 +37,7 @@ object BoardResponse extends TethysInstances {
     * @param properties
     *   специально сформированные id для property, который считается за group
     *
-    * Имеют следующий вид:{{{s"${property.name}-${property.id}-${property.value}"}}}
+    * Имеют следующий вид:{{{s"property.name-property.id-property.value"}}}
     * @param boardToDatabaseIds
     * @param userToUserIds
     * @tparam F

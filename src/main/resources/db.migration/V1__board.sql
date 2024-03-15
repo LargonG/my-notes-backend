@@ -1,6 +1,5 @@
 CREATE TABLE board (
-    id      uuid PRIMARY KEY,
-    title   VARCHAR(256),
-    owner   uuid,
-    groups  uuid[]
+    id      uuid PRIMARY KEY NOT NULL,
+    title   VARCHAR(256) NOT NULL,
+    owner   uuid NOT NULL
 )

@@ -1,6 +1,6 @@
 CREATE TABLE "user" (
-    id              uuid PRIMARY KEY,
-    name            VARCHAR(256),
-    password        VARCHAR(256),
-    registered_in   time
+    id              uuid PRIMARY KEY NOT NULL,
+    name            VARCHAR(256) NOT NULL,
+    password        VARCHAR(256) NOT NULL,
+    registered_in   time NOT NULL
 )

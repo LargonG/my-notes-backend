@@ -1,6 +1,5 @@
 CREATE TABLE "group" (
-    id              uuid PRIMARY KEY,
-    parent_board    uuid,
-    title           VARCHAR(256),
-    tasks           uuid[]
+    id              uuid PRIMARY KEY NOT NULL,
+    board           uuid NOT NULL,
+    title           VARCHAR(256) NOT NULL
 )

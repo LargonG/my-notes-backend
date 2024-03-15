@@ -7,14 +7,14 @@ import doobie.hikari.{Config, HikariTransactor}
 import org.kote.config.PostgresConfig
 
 object transactor {
-  def makeTransactor[F[_] : Async](conf: PostgresConfig): Resource[F, HikariTransactor[F]] = {
+  def makeTransactor[F[_]: Async](conf: PostgresConfig): Resource[F, HikariTransactor[F]] = {
 
     val hikariConfig = Config(
       jdbcUrl = conf.url.some,
       username = conf.user.some,
       password = conf.password.some,
       maximumPoolSize = conf.poolSize.some,
-      driverClassName = "org.postgresql.Driver".some
+      driverClassName = "org.postgresql.Driver".some,
     )
 
     for {
@@ -23,4 +23,3 @@ object transactor {
     } yield xa
   }
 }
-

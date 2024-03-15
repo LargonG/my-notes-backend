@@ -40,11 +40,10 @@ object Main extends IOApp.Simple {
   override def run: IO[Unit] = {
     val ioConfig = IO.delay(ConfigSource.default.loadOrThrow[AppConfig])
 
-    ioConfig.flatMap(config => makeTransactor[IO](config.database).use {
-      _: Transactor[IO] =>
+    ioConfig.flatMap(config =>
+      makeTransactor[IO](config.database).use { _: Transactor[IO] =>
         for {
           _ <- FlywayMigration.migrate[IO](config.database)
-
           userCache <- Cache.ram[IO, UserId, User]
           taskCache <- Cache.ram[IO, TaskId, Task]
           groupCache <- Cache.ram[IO, GroupId, Group]
@@ -144,6 +143,7 @@ object Main extends IOApp.Simple {
               } yield ()
             }
         } yield ()
-    })
+      },
+    )
   }
 }

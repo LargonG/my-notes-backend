@@ -13,3 +13,6 @@ project/target
 files/
 
 todo.*
+
+# secrects
+db-password.txt

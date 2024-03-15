@@ -11,7 +11,11 @@ val tapirVersion = "1.7.6"
 val http4sVersion = "0.23.23"
 
 val pureConfigVersion = "0.17.4"
+
 val flywayVersion = "9.16.0"
+
+val quillVersion = "4.6.0"
+val doobieVersion = "1.0.0-RC2"
 
 lazy val root = (project in file("."))
   .settings(
@@ -47,6 +51,12 @@ lazy val root = (project in file("."))
 
       // enumeratum
       "com.beachape" %% "enumeratum" % enumeratumVersion,
+
+      // doobie + quill
+      "io.getquill" %% "quill-doobie" % quillVersion,
+      "org.tpolecat" %% "doobie-core" % doobieVersion,
+      "org.tpolecat" %% "doobie-postgres" % doobieVersion,
+      "org.tpolecat" %% "doobie-hikari" % doobieVersion,
 
       // circe
       "io.circe" %% "circe-core" % circeVersion,

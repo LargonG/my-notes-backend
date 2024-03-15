@@ -1,16 +1,13 @@
 package org.kote
 
-import cats.MonadThrow
-import cats.data.OptionT
-import cats.effect.std.Env
 import cats.effect.{ExitCode, IO, IOApp}
 import com.comcast.ip4s.{Host, Port}
 import org.asynchttpclient.DefaultAsyncHttpClient
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.server.Router
-import org.kote.client.notion.configuration.NotionConfiguration
 import org.kote.client.notion._
 import org.kote.common.cache.Cache
+import org.kote.config.AppConfig
 import org.kote.controller._
 import org.kote.domain.board.Board
 import org.kote.domain.board.Board.BoardId
@@ -27,17 +24,19 @@ import org.kote.domain.user.User.UserId
 import org.kote.repository._
 import org.kote.service._
 import org.kote.service.notion.v1.PropertyId
+import pureconfig.ConfigSource
+import pureconfig.generic.auto._
 import sttp.client3.SttpBackend
 import sttp.client3.asynchttpclient.cats.AsyncHttpClientCatsBackend
 import sttp.tapir.server.http4s.Http4sServerInterpreter
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
 
 import java.nio.charset.StandardCharsets
-import scala.concurrent.duration.DurationInt
 
 object Main extends IOApp {
   override def run(args: List[String]): IO[ExitCode] =
     for {
+      config <- IO.delay(ConfigSource.default.loadOrThrow[AppConfig])
       userCache <- Cache.ram[IO, UserId, User]
       taskCache <- Cache.ram[IO, TaskId, Task]
       groupCache <- Cache.ram[IO, GroupId, Group]
@@ -57,26 +56,20 @@ object Main extends IOApp {
       groupProperty <- Cache.ram[IO, GroupId, PropertyId]
       propertyGroup <- Cache.ram[IO, PropertyId, GroupId]
 
-      notionApiKey <- getNotionApiKey[IO].orElse(IO.pure(""))
       endpoints <- IO.delay {
         val backend: SttpBackend[IO, Any] =
           AsyncHttpClientCatsBackend.usingClient[IO](new DefaultAsyncHttpClient)
 
-        val config = NotionConfiguration(
-          apiKey = notionApiKey,
-          notionVersion = "2022-06-28",
-          url = "https://api.notion.com",
-          timeout = 10.seconds,
-        )
+        val notionConfig = config.notion.toNotionClientConfiguration
 
         val notionDatabaseClient: NotionDatabaseClient[IO] =
-          NotionDatabaseClient.http(backend, config)
+          NotionDatabaseClient.http(backend, notionConfig)
 
         val notionPageClient: NotionPageClient[IO] =
-          NotionPageClient.http(backend, config)
+          NotionPageClient.http(backend, notionConfig)
 
         val notionUserClient: NotionUserClient[IO] =
-          NotionUserClient.http(backend, config)
+          NotionUserClient.http(backend, notionConfig)
 
         val userRepo = UserRepository.inMemory(userCache)
         val taskRepo = TaskRepository.inMemory(taskCache)
@@ -128,7 +121,9 @@ object Main extends IOApp {
       }
       swagger = SwaggerInterpreter().fromServerEndpoints[IO](endpoints, "my-notes", "1.0.0")
       routes = Http4sServerInterpreter[IO]().toRoutes(swagger ++ endpoints)
-      port <- getPort[IO]
+      port <- IO.fromOption(Port.fromInt(config.http.port))(
+        new IllegalArgumentException("Invalid http port"),
+      )
       _ <- EmberServerBuilder
         .default[IO]
         .withHost(Host.fromString("localhost").get)
@@ -144,20 +139,4 @@ object Main extends IOApp {
           } yield ()
         }
     } yield ExitCode.Success
-
-  private def getPort[F[_]: Env: MonadThrow]: F[Port] =
-    OptionT(Env[F].get("HTTP_PORT"))
-      .toRight("HTTP_PORT not found")
-      .subflatMap(ps =>
-        ps.toIntOption.toRight(s"Expected int in HTTP_PORT env variable, but got $ps"),
-      )
-      .subflatMap(pi => Port.fromInt(pi).toRight(s"No such port $pi"))
-      .leftMap(new IllegalArgumentException(_))
-      .rethrowT
-
-  private def getNotionApiKey[F[_]: Env: MonadThrow]: F[String] =
-    OptionT(Env[F].get("NOTION_KEY"))
-      .toRight("NOTION_API_KEY not found")
-      .leftMap(new IllegalArgumentException(_))
-      .rethrowT
 }

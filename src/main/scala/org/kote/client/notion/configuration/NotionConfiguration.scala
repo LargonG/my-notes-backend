@@ -3,8 +3,8 @@ package org.kote.client.notion.configuration
 import scala.concurrent.duration.FiniteDuration
 
 case class NotionConfiguration(
-    apiKey: String,
-    notionVersion: String,
+    token: String,
     url: String,
+    version: String,
     timeout: FiniteDuration,
-) {}
+)

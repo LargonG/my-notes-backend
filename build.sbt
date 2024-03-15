@@ -10,6 +10,9 @@ val sttpClientVersion = "3.9.0"
 val tapirVersion = "1.7.6"
 val http4sVersion = "0.23.23"
 
+val pureConfigVersion = "0.17.4"
+val flywayVersion = "9.16.0"
+
 lazy val root = (project in file("."))
   .settings(
     name := "my-notes",
@@ -50,15 +53,23 @@ lazy val root = (project in file("."))
       "io.circe" %% "circe-generic" % circeVersion,
       "io.circe" %% "circe-parser" % circeVersion,
 
+      // pureconfig
+      "com.github.pureconfig" %% "pureconfig" % pureConfigVersion,
+
+      // flyway
+      "org.flywaydb" % "flyway-core" % flywayVersion,
+
       // tests
       "com.softwaremill.sttp.tapir" %% "tapir-sttp-stub-server" % tapirVersion % Test,
       "org.scalatest" %% "scalatest" % scalatestVersion % Test,
       "org.scalamock" %% "scalamock" % scalamockVersion % Test,
       "org.typelevel" %% "cats-effect-testing-scalatest" % testVersion % Test,
+      "org.scalatestplus" %% "mockito-4-11" % mockitoVersion % Test,
+
+      // Ungrouped
       "com.github.cb372" %% "cats-retry" % catsRetryVersion,
       "org.typelevel" %% "log4cats-core" % catsLoggingVersion,
       "org.typelevel" %% "log4cats-slf4j" % catsLoggingVersion,
-      "org.scalatestplus" %% "mockito-4-11" % mockitoVersion % Test,
       "com.dimafeng" %% "testcontainers-scala-scalatest" % testContainersVersion,
       "com.typesafe" % "config" % configVersion,
       "com.iheart" %% "ficus" % ficusVersion,

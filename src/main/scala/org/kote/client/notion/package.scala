@@ -101,8 +101,8 @@ package object notion {
       config: NotionConfiguration,
   ): RequestT[Empty, Either[String, String], Any] =
     basicRequest
-      .header("Authorization", s"Bearer ${config.apiKey}")
-      .header("Notion-Version", config.notionVersion)
+      .header("Authorization", s"Bearer ${config.token}")
+      .header("Notion-Version", config.version)
       .contentType("application/json")
 
   private[notion] def optionIfSuccess[F[_]: ApplicativeThrow, T](

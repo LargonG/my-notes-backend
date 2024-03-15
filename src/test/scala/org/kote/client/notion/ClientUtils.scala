@@ -14,8 +14,8 @@ trait ClientUtils {
 
   val notionConfig: NotionConfiguration = NotionConfiguration(
     "secret_TRstxQadmcWlZbRwXUlr2WZdTujLi2F1AGb1CLEFTyw",
-    "2022-06-28",
     "https://api.notion.com",
+    "2022-06-28",
     10.seconds,
   )
 }

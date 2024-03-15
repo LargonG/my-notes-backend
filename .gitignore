@@ -15,4 +15,4 @@ files/
 todo.*
 
 # secrects
-db-password.txt
+secrets/

@@ -4,13 +4,13 @@ services:
     restart: always
     shm_size: 128mb
     environment:
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: run/secrets/db-password
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      POSTGRES_DB: my-notes-db
     ports:
       - 5432:5432
     secrets:
-      - db-password
+      - db_password
 
 secrets:
-  db-password:
-    file: ./db-password.txt
+  db_password:
+    environment: "DB_PASSWORD"

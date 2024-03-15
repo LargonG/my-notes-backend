@@ -16,8 +16,6 @@ import org.kote.domain.board.Board
 import org.kote.domain.board.Board.BoardId
 import org.kote.domain.comment.Comment
 import org.kote.domain.comment.Comment.CommentId
-import org.kote.domain.content.file.File
-import org.kote.domain.content.file.File.{FileId, fileParser}
 import org.kote.domain.group.Group
 import org.kote.domain.group.Group.GroupId
 import org.kote.domain.task.Task
@@ -34,8 +32,6 @@ import sttp.client3.asynchttpclient.cats.AsyncHttpClientCatsBackend
 import sttp.tapir.server.http4s.Http4sServerInterpreter
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
 
-import java.nio.charset.StandardCharsets
-
 object Main extends IOApp.Simple {
   override def run: IO[Unit] = {
     val ioConfig = IO.delay(ConfigSource.default.loadOrThrow[AppConfig])
@@ -49,7 +45,6 @@ object Main extends IOApp.Simple {
           groupCache <- Cache.ram[IO, GroupId, Group]
           boardCache <- Cache.ram[IO, BoardId, Board]
           commentCache <- Cache.ram[IO, CommentId, Comment]
-          fileCache <- Cache.disk[IO, FileId, File]("files", StandardCharsets.UTF_8)
 
           boardDb <- Cache.ram[IO, BoardId, NotionDatabaseId]
           dbBoard <- Cache.ram[IO, NotionDatabaseId, BoardId]
@@ -83,7 +78,6 @@ object Main extends IOApp.Simple {
             val groupRepo = GroupRepository.inMemory(groupCache)
             val boardRepo = BoardRepository.inMemory(boardCache)
             val commentRepo = CommentRepository.inMemory(commentCache)
-            val fileRepo = FileRepository.inMemory(fileCache)
 
             val databaseIntegration = IntegrationRepository.inMemory(boardDb, dbBoard)
             val userMainPageIntegration = IntegrationRepository.inMemory(userPage, pageUser)
@@ -105,8 +99,8 @@ object Main extends IOApp.Simple {
                   userMainPageIntegration,
                 ),
               ),
-              TaskController.make(TaskService.fromRepository(boardRepo, groupRepo, taskRepo)),
-              GroupController.make(GroupService.fromRepository(boardRepo, groupRepo, taskRepo)),
+              TaskController.make(TaskService.fromRepository(taskRepo)),
+              GroupController.make(GroupService.fromRepository(groupRepo, taskRepo)),
               BoardController.make(
                 BoardService.syncNotion(
                   boardRepo,
@@ -119,8 +113,7 @@ object Main extends IOApp.Simple {
                   groupToPropertyIntegration,
                 ),
               ),
-              CommentController.make(CommentService.fromRepository(taskRepo, commentRepo)),
-              FileController.make(FileService.fromRepository(taskRepo, fileRepo)),
+              CommentController.make(CommentService.fromRepository(commentRepo)),
             ).flatMap(_.endpoints)
           }
           swagger = SwaggerInterpreter().fromServerEndpoints[IO](endpoints, "my-notes", "1.0.0")

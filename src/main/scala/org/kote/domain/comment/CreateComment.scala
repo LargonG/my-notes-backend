@@ -1,7 +1,7 @@
 package org.kote.domain.comment
 
 import org.kote.common.tethys.TethysInstances
-import org.kote.domain.content.file.File.FileId
+import org.kote.domain.content.Content
 import org.kote.domain.task.Task.TaskId
 import org.kote.domain.user.User.UserId
 import sttp.tapir.Schema
@@ -13,8 +13,7 @@ import scala.annotation.nowarn
 final case class CreateComment(
     parent: TaskId,
     author: UserId,
-    text: String,
-    files: List[FileId],
+    content: Content,
 )
 
 object CreateComment extends TethysInstances {

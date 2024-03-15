@@ -8,7 +8,7 @@ import org.kote.common.cache.Cache
 package object inmemory {
   private[repository] def cacheUpdateAndGet[F[_]: Monad, T, ID, CMD](
       id: ID,
-      cmds: List[CMD],
+      cmds: Seq[CMD],
       loop: (T, CMD) => T,
       get: ID => OptionT[F, T],
       cache: Cache[F, ID, T],
@@ -17,7 +17,7 @@ package object inmemory {
 
   private[repository] def cacheGetAndUpdate[F[_]: Monad, T, ID, CMD](
       id: ID,
-      cmds: List[CMD],
+      cmds: Seq[CMD],
       loop: (T, CMD) => T,
       get: ID => OptionT[F, T],
       cache: Cache[F, ID, T],
@@ -26,7 +26,7 @@ package object inmemory {
 
   private def cacheUpdate[F[_]: Monad, T, ID, CMD](
       id: ID,
-      cmds: List[CMD],
+      cmds: Seq[CMD],
       loop: (T, CMD) => T,
       get: ID => OptionT[F, T],
       cache: Cache[F, ID, T],

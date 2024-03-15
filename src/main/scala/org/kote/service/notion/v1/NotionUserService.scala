@@ -4,22 +4,15 @@ import cats.MonadThrow
 import cats.data.OptionT
 import cats.effect.kernel.Clock
 import cats.effect.std.UUIDGen
+import cats.implicits.toTraverseOps
 import cats.syntax.functor._
 import org.kote.client.notion.model.page.PageSearchRequest
 import org.kote.client.notion.model.parent.WorkspaceParent
 import org.kote.client.notion.{NotionPageClient, NotionPageId, NotionUserClient, NotionUserId}
 import org.kote.domain.user.User.UserId
 import org.kote.domain.user.{CreateUser, UnsafeUserResponse, User, UserResponse}
-import org.kote.repository.UserRepository.UserUpdateCommand
-import org.kote.repository.{
-  BoardRepository,
-  GroupRepository,
-  IntegrationRepository,
-  TaskRepository,
-  UserRepository,
-}
+import org.kote.repository._
 import org.kote.service.UserService
-import cats.implicits.toTraverseOps
 
 class NotionUserService[F[_]: UUIDGen: MonadThrow: Clock](
     userRepository: UserRepository[F],
@@ -50,9 +43,6 @@ class NotionUserService[F[_]: UUIDGen: MonadThrow: Clock](
       _ <- OptionT.liftF(userMainPageIntegration.set(user.id, main.id))
     } yield user.toUnsafeResponse(Option(notionUser))
 
-  override def update(id: UserId, cmds: List[UserUpdateCommand]): OptionT[F, UnsafeUserResponse] =
-    userRepository.update(id, cmds).map(_.toUnsafeResponse())
-
   override def list: F[List[UserResponse]] =
     userRepository.all.map(_.map(_.toResponse))
 
@@ -67,9 +57,9 @@ class NotionUserService[F[_]: UUIDGen: MonadThrow: Clock](
       deleted <- userRepository.delete(id)
       boards <- boardRepository.list(deleted.id)
       _ <- boards.traverse(board => boardRepository.delete(board.id))
-      groupIds = boards.flatMap(_.groups)
-      groups <- groupIds.traverse(groupRepository.delete)
-      taskIds = groups.flatMap(_.tasks)
-      _ <- taskIds.traverse(taskRepository.delete)
+      groups <- boards.traverse(board => groupRepository.list(board.id)).map(_.flatten)
+      _ <- groups.traverse(group => groupRepository.delete(group.id))
+      tasks <- boards.traverse(board => taskRepository.listByBoard(board.id)).map(_.flatten)
+      _ <- tasks.traverse(task => taskRepository.delete(task.id))
     } yield deleted.toUnsafeResponse()
 }

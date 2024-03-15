@@ -1,23 +1,16 @@
 package org.kote.service
 
-import cats.{Monad, MonadThrow}
 import cats.data.OptionT
 import cats.effect.kernel.Clock
 import cats.effect.std.UUIDGen
 import cats.implicits.toTraverseOps
 import cats.syntax.flatMap._
 import cats.syntax.functor._
+import cats.{Monad, MonadThrow}
 import org.kote.client.notion.{NotionPageClient, NotionPageId, NotionUserClient, NotionUserId}
 import org.kote.domain.user.User.UserId
 import org.kote.domain.user.{CreateUser, UnsafeUserResponse, User, UserResponse}
-import org.kote.repository.{
-  BoardRepository,
-  GroupRepository,
-  IntegrationRepository,
-  TaskRepository,
-  UserRepository,
-}
-import org.kote.repository.UserRepository.UserUpdateCommand
+import org.kote.repository._
 import org.kote.service.notion.v1.NotionUserService
 
 trait UserService[F[_]] {
@@ -30,21 +23,6 @@ trait UserService[F[_]] {
     *   нового пользователя
     */
   def create(createUser: CreateUser): OptionT[F, UnsafeUserResponse]
-
-  // todo: вообще, вызов этого метода не безопасен, так как в случае
-  //  обновления trello или notion должна происходить умная логика импорта зависимостей, а её будет
-  //  криво реализовывать в этом методе, поэтому его нужно убрать
-
-  /** Обновляет поля у пользователя
-    *
-    * @param id
-    *   пользователя
-    * @param cmds
-    *   команда обновления
-    * @return
-    *   пользователя с новыми данными
-    */
-  def update(id: UserId, cmds: List[UserUpdateCommand]): OptionT[F, UnsafeUserResponse]
 
   /** Список всех пользователей, что есть на сайте
     *
@@ -127,9 +105,6 @@ class RepositoryUserService[F[_]: UUIDGen: Monad: Clock](
       _ <- userRepository.create(user)
     } yield user.toUnsafeResponse())
 
-  override def update(id: UserId, cmds: List[UserUpdateCommand]): OptionT[F, UnsafeUserResponse] =
-    userRepository.update(id, cmds).map(_.toUnsafeResponse())
-
   override def list: F[List[UserResponse]] =
     userRepository.all.map(_.map(_.toResponse))
 
@@ -144,9 +119,9 @@ class RepositoryUserService[F[_]: UUIDGen: Monad: Clock](
       deleted <- userRepository.delete(id)
       boards <- boardRepository.list(deleted.id)
       _ <- boards.traverse(board => boardRepository.delete(board.id))
-      groupIds = boards.flatMap(_.groups)
-      groups <- groupIds.traverse(groupRepository.delete)
-      taskIds = groups.flatMap(_.tasks)
-      _ <- taskIds.traverse(taskRepository.delete)
+      groups <- boards.traverse(board => groupRepository.list(board.id)).map(_.flatten)
+      _ <- groups.traverse(group => groupRepository.delete(group.id))
+      tasks <- boards.traverse(board => taskRepository.listByBoard(board.id)).map(_.flatten)
+      _ <- tasks.traverse(task => taskRepository.delete(task.id))
     } yield deleted.toUnsafeResponse()
 }

@@ -18,14 +18,6 @@ class InMemoryUserRepository[F[_]: Monad](cache: Cache[F, UserId, User]) extends
 
   override def delete(id: UserId): OptionT[F, User] = OptionT(cache.remove(id))
 
-  override def update(id: UserId, cmds: List[UserUpdateCommand]): OptionT[F, User] = {
-    def loop(user: User, cmd: UserUpdateCommand): User = cmd match {
-      case UserRepository.UpdateName(name) =>
-        user.copy(name = name)
-      case UserRepository.UpdatePassword(password) =>
-        user.copy(password = password)
-    }
-
-    cacheUpdateAndGet(id, cmds, loop, get, cache)
-  }
+  override def update(id: UserId, cmds: UserUpdateCommand*): OptionT[F, User] =
+    cacheUpdateAndGet(id, cmds, UserRepository.standardUpdateLoop, get, cache)
 }

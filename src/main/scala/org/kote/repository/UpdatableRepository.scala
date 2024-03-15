@@ -14,5 +14,5 @@ trait UpdatableRepository[F[_], T, ID, CMD] extends Repository[F, T, ID] {
     * @return
     *   объект после изменений, если он существовал
     */
-  def update(id: ID, cmds: List[CMD]): OptionT[F, T]
+  def update(id: ID, cmds: CMD*): OptionT[F, T]
 }

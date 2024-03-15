@@ -1,7 +1,5 @@
 package org.kote.common.filename
 
-import org.kote.domain.content.file.File.FileId
-
 import java.util.UUID
 
 trait FileName[T] {
@@ -17,7 +15,4 @@ object FileName {
 
   implicit val stringFileName: FileName[String] = identity
   implicit val uuidFileName: FileName[UUID] = _.toString
-
-  implicit val fileIdFilename: FileName[FileId] =
-    fileId => uuidFileName.getFileName(fileId.inner)
 }

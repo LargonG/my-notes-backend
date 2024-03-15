@@ -26,20 +26,7 @@ class InMemoryBoardRepository[F[_]: Monad](cache: Cache[F, BoardId, Board])
 
   override def update(
       id: BoardId,
-      cmds: List[BoardUpdateCommand],
-  ): OptionT[F, Board] = {
-    def loop(board: Board, cmd: BoardUpdateCommand): Board = cmd match {
-      case BoardRepository.UpdateTitle(title) =>
-        board.copy(title = title)
-      case BoardRepository.ChangeGroups(groups) =>
-        board.copy(groups = groups)
-      case BoardRepository.AddGroup(groupId) =>
-        board.copy(groups = groupId :: board.groups)
-      case BoardRepository.RemoveGroup(groupId) =>
-        board.copy(groups = board.groups.filterNot(_ == groupId))
-    }
-
-    cacheUpdateAndGet(id, cmds, loop, get, cache)
-  }
-
+      cmds: BoardUpdateCommand*,
+  ): OptionT[F, Board] =
+    cacheUpdateAndGet(id, cmds, BoardRepository.standardUpdateLoop, get, cache)
 }

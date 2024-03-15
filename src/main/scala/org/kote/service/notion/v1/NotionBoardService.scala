@@ -5,18 +5,9 @@ import cats.data.OptionT
 import cats.effect.std.UUIDGen
 import cats.implicits.{toFlatMapOps, toTraverseOps}
 import cats.syntax.functor._
-import org.kote.client.notion.model.database.{DbSearchRequest, DbUpdateRequest}
 import org.kote.client.notion._
-import org.kote.client.notion.model.page.{
-  PageFilesPropertyResponse,
-  PageOtherPropertyResponseValue,
-  PagePeoplePropertyResponse,
-  PageRichTextPropertyResponse,
-  PageSelectPropertyResponse,
-  PageStatusPropertyResponse,
-  PageTitlePropertyResponse,
-}
-import org.kote.client.notion.model.text.RichText
+import org.kote.client.notion.model.database.DbSearchRequest
+import org.kote.client.notion.model.page._
 import org.kote.domain.board.Board.BoardId
 import org.kote.domain.board.{Board, BoardResponse, CreateBoard}
 import org.kote.domain.group.Group.GroupId
@@ -24,6 +15,8 @@ import org.kote.domain.user.User
 import org.kote.domain.user.User.UserId
 import org.kote.repository.{BoardRepository, GroupRepository, IntegrationRepository, TaskRepository}
 import org.kote.service.BoardService
+
+import scala.annotation.unused
 
 class NotionBoardService[F[_]: Monad: UUIDGen](
     // repositories
@@ -36,6 +29,7 @@ class NotionBoardService[F[_]: Monad: UUIDGen](
     databaseIntegration: IntegrationRepository[F, BoardId, NotionDatabaseId],
     userMainPageIntegration: IntegrationRepository[F, UserId, NotionPageId],
     userToUserIntegration: IntegrationRepository[F, UserId, NotionUserId],
+    @unused
     propertyIntegration: IntegrationRepository[F, GroupId, PropertyId],
 ) extends BoardService[F] {
 
@@ -53,10 +47,9 @@ class NotionBoardService[F[_]: Monad: UUIDGen](
           _ <- OptionT.liftF(databaseIntegration.set(board.id, response.id))
         } yield response).value
       } yield BoardResponse
-        .fromNotionResponse(result, List.empty)(
+        .fromNotionResponse(result)(
           databaseIntegration,
           userToUserIntegration,
-          propertyIntegration,
         )
         .value).flatten,
     )
@@ -71,10 +64,9 @@ class NotionBoardService[F[_]: Monad: UUIDGen](
       properties <- filtered.traverse(getProperties)
       zipped = filtered.zip(properties)
       mapped <- zipped.traverse(zip =>
-        BoardResponse.fromNotionResponse(Some(zip._1), zip._2)(
+        BoardResponse.fromNotionResponse(Some(zip._1))(
           databaseIntegration,
           userToUserIntegration,
-          propertyIntegration,
         ),
       )
     } yield mapped).getOrElse(List.empty)
@@ -83,38 +75,38 @@ class NotionBoardService[F[_]: Monad: UUIDGen](
     for {
       databaseId <- databaseIntegration.getByKey(id)
       database <- notionDatabaseClient.get(databaseId)
-      properties <- getProperties(database)
-      res <- BoardResponse.fromNotionResponse(Some(database), properties)(
+      _ <- getProperties(database)
+      res <- BoardResponse.fromNotionResponse(Some(database))(
         databaseIntegration,
         userToUserIntegration,
-        propertyIntegration,
       )
     } yield res
 
-  override def update(
-      id: Board.BoardId,
-      cmds: List[BoardRepository.BoardUpdateCommand],
-  ): OptionT[F, BoardResponse] =
-    for {
-      board <- boardRepository.update(id, cmds)
-      databaseId <- databaseIntegration.getByKey(id)
-      database <- notionDatabaseClient.update(
-        databaseId,
-        DbUpdateRequest(Some(List(RichText.text(board.title))), Map.empty),
-      )
-      properties <- getProperties(database)
-      res <- BoardResponse.fromNotionResponse(Some(database), properties)(
-        databaseIntegration,
-        userToUserIntegration,
-        propertyIntegration,
-      )
-    } yield res
+//  override def update(
+//      id: Board.BoardId,
+//      cmds: List[BoardRepository.BoardUpdateCommand],
+//  ): OptionT[F, BoardResponse] =
+//    for {
+//      board <- boardRepository.update(id, cmds)
+//      databaseId <- databaseIntegration.getByKey(id)
+//      database <- notionDatabaseClient.update(
+//        databaseId,
+//        DbUpdateRequest(Some(List(RichText.text(board.title))), Map.empty),
+//      )
+//      _ <- getProperties(database)
+//      res <- BoardResponse.fromNotionResponse(Some(database))(
+//        databaseIntegration,
+//        userToUserIntegration,
+//      )
+//    } yield res
 
   override def delete(id: Board.BoardId): OptionT[F, BoardResponse] =
     for {
       deleted <- boardRepository.delete(id)
-      groups <- deleted.groups.traverse(groupRepository.delete)
-      _ <- groups.traverse(_.tasks.traverse(taskRepository.delete))
+      groups <- groupRepository.list(deleted.id)
+      _ <- groups.traverse(group => groupRepository.delete(group.id))
+      tasks <- taskRepository.listByBoard(deleted.id)
+      _ <- tasks.traverse(task => taskRepository.delete(task.id))
       _ <- databaseIntegration.delete(deleted.id)
     } yield deleted.toResponse
 

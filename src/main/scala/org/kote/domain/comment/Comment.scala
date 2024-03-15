@@ -13,13 +13,13 @@ import java.util.UUID
 
 final case class Comment(
     id: CommentId,
-    parent: TaskId,
+    taskParent: TaskId,
     author: UserId,
     content: Content,
     createdAt: Instant,
 ) {
   def toResponse: CommentResponse =
-    CommentResponse(id, author, content.text, content.files, createdAt)
+    CommentResponse(id, taskParent, author, content, createdAt)
 }
 
 object Comment {
@@ -28,7 +28,7 @@ object Comment {
       CommentId(uuid),
       createComment.parent,
       createComment.author,
-      Content(createComment.text, createComment.files),
+      createComment.content,
       date,
     )
 

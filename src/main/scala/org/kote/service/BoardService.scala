@@ -11,7 +11,6 @@ import org.kote.domain.board.Board.BoardId
 import org.kote.domain.board.{Board, BoardResponse, CreateBoard}
 import org.kote.domain.group.Group.GroupId
 import org.kote.domain.user.User.UserId
-import org.kote.repository.BoardRepository.BoardUpdateCommand
 import org.kote.repository.{BoardRepository, GroupRepository, IntegrationRepository, TaskRepository}
 import org.kote.service.notion.v1.{NotionBoardService, PropertyId}
 
@@ -23,8 +22,6 @@ trait BoardService[F[_]] {
   def list(user: UserId): F[List[BoardResponse]]
 
   def get(id: BoardId): OptionT[F, BoardResponse]
-
-  def update(id: BoardId, cmds: List[BoardUpdateCommand]): OptionT[F, BoardResponse]
 
   def delete(id: BoardId): OptionT[F, BoardResponse]
 }
@@ -77,13 +74,12 @@ class RepositoryBoardService[F[_]: UUIDGen: Monad](
   override def get(id: BoardId): OptionT[F, BoardResponse] =
     boardRepository.get(id).map(_.toResponse)
 
-  override def update(id: BoardId, cmds: List[BoardUpdateCommand]): OptionT[F, BoardResponse] =
-    boardRepository.update(id, cmds).map(_.toResponse)
-
   override def delete(id: BoardId): OptionT[F, BoardResponse] =
     for {
       deleted <- boardRepository.delete(id)
-      groups <- deleted.groups.traverse(groupRepository.delete)
-      _ <- groups.traverse(_.tasks.traverse(taskRepository.delete))
+      groups <- groupRepository.list(id)
+      _ <- groups.traverse(group => groupRepository.delete(group.id))
+      tasks <- taskRepository.listByBoard(id)
+      _ <- tasks.traverse(task => taskRepository.delete(task.id))
     } yield deleted.toResponse
 }

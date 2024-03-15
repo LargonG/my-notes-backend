@@ -2,7 +2,6 @@ package org.kote.domain.task
 
 import org.kote.common.tethys.TethysInstances
 import org.kote.domain.board.Board.BoardId
-import org.kote.domain.comment.Comment.CommentId
 import org.kote.domain.content.Content
 import org.kote.domain.group.Group.GroupId
 import org.kote.domain.task.Task.{Status, TaskId}
@@ -21,7 +20,6 @@ final case class Task(
     assigns: List[UserId],
     status: Status,
     content: Content,
-    comments: List[CommentId],
     createdAt: Instant,
     updatedAt: Instant,
 ) {
@@ -31,9 +29,7 @@ final case class Task(
       title,
       assigns,
       status,
-      content.text,
-      content.files,
-      comments,
+      content,
       createdAt,
       updatedAt,
     )
@@ -45,13 +41,12 @@ object Task {
   def fromCreateTask(id: UUID, date: Instant, createTask: CreateTask): Task =
     Task(
       id = TaskId(id),
-      createTask.board,
-      createTask.group,
+      createTask.boardParent,
+      createTask.groupParent,
       title = createTask.title,
       assigns = List(),
       status = "", // TODO: тут должно быть что-то поумнее
-      content = Content("", List()),
-      comments = List(),
+      content = Content(""),
       createdAt = date,
       updatedAt = date,
     )

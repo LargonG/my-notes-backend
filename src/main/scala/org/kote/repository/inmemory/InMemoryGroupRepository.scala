@@ -23,17 +23,7 @@ class InMemoryGroupRepository[F[_]: Monad](cache: Cache[F, GroupId, Group])
 
   override def update(
       id: GroupId,
-      cmds: List[GroupUpdateCommand],
-  ): OptionT[F, Group] = {
-    def loop(group: Group, cmd: GroupUpdateCommand): Group = cmd match {
-      case GroupRepository.UpdateTitle(title) =>
-        group.copy(title = title)
-      case GroupRepository.AddTask(task) =>
-        group.copy(tasks = task :: group.tasks)
-      case GroupRepository.RemoveTask(task) =>
-        group.copy(tasks = group.tasks.filterNot(_ == task))
-    }
-
-    cacheUpdateAndGet(id, cmds, loop, get, cache)
-  }
+      cmds: GroupUpdateCommand*,
+  ): OptionT[F, Group] =
+    cacheUpdateAndGet(id, cmds, GroupRepository.standardUpdateGroup, get, cache)
 }

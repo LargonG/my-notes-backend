@@ -19,4 +19,11 @@ object UserRepository {
 
   def inMemory[F[_]: Monad](cache: Cache[F, UserId, User]): UserRepository[F] =
     new InMemoryUserRepository[F](cache)
+
+  private[repository] def standardUpdateLoop(user: User, cmd: UserUpdateCommand): User = cmd match {
+    case UserRepository.UpdateName(name) =>
+      user.copy(name = name)
+    case UserRepository.UpdatePassword(password) =>
+      user.copy(password = password)
+  }
 }

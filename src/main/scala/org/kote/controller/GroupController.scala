@@ -4,6 +4,7 @@ import org.kote.common.controller.Controller
 import org.kote.domain.group.Group.GroupId
 import org.kote.domain.group.{CreateGroup, GroupResponse}
 import org.kote.domain.task.Task.TaskId
+import org.kote.domain.task.TaskResponse
 import org.kote.service.GroupService
 import sttp.tapir._
 import sttp.tapir.json.tethysjson.jsonBody
@@ -33,13 +34,12 @@ class GroupController[F[_]](groupService: GroupService[F]) extends Controller[F]
       .summary("Переместить задачу в другую колонку")
       .in(
         standardPath / "move"
-          / query[GroupId]("from")
           / query[GroupId]("to")
           / query[TaskId]("what"),
       )
-      .out(jsonBody[Option[String]])
-      .serverLogicSuccess { case (from, to, what) =>
-        groupService.moveTask(from, to, what).value
+      .out(jsonBody[Option[TaskResponse]])
+      .serverLogicSuccess { case (to, what) =>
+        groupService.moveTask(to, what).value
       }
 
   private val deleteGroup: ServerEndpoint[Any, F] =

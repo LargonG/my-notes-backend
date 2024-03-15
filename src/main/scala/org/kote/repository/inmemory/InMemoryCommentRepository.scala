@@ -15,7 +15,7 @@ class InMemoryCommentRepository[F[_]: Functor](cache: Cache[F, CommentId, Commen
   override def create(comment: Comment): F[Long] = cache.add(comment.id, comment).as(1L)
 
   override def list(taskId: TaskId): OptionT[F, List[Comment]] =
-    OptionT.liftF(cache.values.map(_.filter(_.parent == taskId)))
+    OptionT.liftF(cache.values.map(_.filter(_.taskParent == taskId)))
 
   override def get(id: CommentId): OptionT[F, Comment] = OptionT(cache.get(id))
 

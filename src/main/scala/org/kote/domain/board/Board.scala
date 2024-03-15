@@ -2,7 +2,6 @@ package org.kote.domain.board
 
 import org.kote.common.tethys.TethysInstances
 import org.kote.domain.board.Board.BoardId
-import org.kote.domain.group.Group.GroupId
 import org.kote.domain.user.User.UserId
 import sttp.tapir.Schema
 import tethys.{JsonReader, JsonWriter}
@@ -13,10 +12,9 @@ final case class Board(
     id: BoardId,
     title: String,
     owner: UserId,
-    groups: List[GroupId],
 ) {
   def toResponse: BoardResponse =
-    BoardResponse(id, title, owner, groups)
+    BoardResponse(id, title, owner)
 }
 
 object Board {
@@ -29,5 +27,5 @@ object Board {
   }
 
   def fromCreateBoard(uuid: UUID, createBoard: CreateBoard): Board =
-    Board(BoardId(uuid), createBoard.title, createBoard.createdBy, List())
+    Board(BoardId(uuid), createBoard.title, createBoard.createdBy)
 }

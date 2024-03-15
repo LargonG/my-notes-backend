@@ -11,8 +11,7 @@ import org.kote.domain.board.Board.BoardId
 import org.kote.domain.group.Group.GroupId
 import org.kote.domain.task.Task.{Status, TaskId}
 import org.kote.domain.task.{CreateTask, Task, TaskResponse}
-import org.kote.repository.TaskRepository.TaskUpdateCommand
-import org.kote.repository.{BoardRepository, GroupRepository, TaskRepository}
+import org.kote.repository.TaskRepository
 
 trait TaskService[F[_]] {
 
@@ -33,23 +32,17 @@ trait TaskService[F[_]] {
 
   def get(id: TaskId): OptionT[F, TaskResponse]
 
-  def update(id: TaskId, cmds: List[TaskUpdateCommand]): OptionT[F, TaskResponse]
-
   def delete(id: TaskId): OptionT[F, TaskResponse]
 }
 
 object TaskService {
   def fromRepository[F[_]: UUIDGen: Monad: Clock](
-      boardRepository: BoardRepository[F],
-      groupRepository: GroupRepository[F],
       taskRepository: TaskRepository[F],
   ): TaskService[F] =
-    new RepositoryTaskService[F](boardRepository, groupRepository, taskRepository)
+    new RepositoryTaskService[F](taskRepository)
 }
 
 class RepositoryTaskService[F[_]: UUIDGen: Monad: Clock](
-    boardRepository: BoardRepository[F],
-    groupRepository: GroupRepository[F],
     taskRepository: TaskRepository[F],
 ) extends TaskService[F] {
 
@@ -59,7 +52,6 @@ class RepositoryTaskService[F[_]: UUIDGen: Monad: Clock](
       time <- Clock[F].realTimeInstant
       task = Task.fromCreateTask(uuid, time, createTask)
       _ <- taskRepository.create(task)
-      _ <- groupRepository.update(task.group, GroupRepository.AddTask(task.id)).value
     } yield task.toResponse)
 
   override def listByStatus(boardId: BoardId, status: Status): OptionT[F, List[TaskResponse]] =
@@ -73,25 +65,16 @@ class RepositoryTaskService[F[_]: UUIDGen: Monad: Clock](
       .map(list => list.filter(_._2).map(_._1))
 
   override def list(boardId: BoardId): OptionT[F, List[TaskResponse]] =
-    for {
-      board <- boardRepository.get(boardId)
-      lists <- board.groups.traverse(id => listByGroup(id))
-    } yield lists.flatten
+    taskRepository.listByBoard(boardId).map(_.map(_.toResponse))
 
   override def listByGroup(groupId: GroupId): OptionT[F, List[TaskResponse]] =
-    (for {
-      group <- groupRepository.get(groupId)
-    } yield group.tasks.traverse(id => taskRepository.get(id).map(_.toResponse))).flatten
+    taskRepository.listByGroup(groupId).map(_.map(_.toResponse))
 
   override def get(id: TaskId): OptionT[F, TaskResponse] =
     taskRepository.get(id).map(_.toResponse)
 
-  override def update(id: TaskId, cmds: List[TaskUpdateCommand]): OptionT[F, TaskResponse] =
-    taskRepository.update(id, cmds).map(_.toResponse)
-
   override def delete(id: TaskId): OptionT[F, TaskResponse] =
     for {
       deleted <- taskRepository.delete(id)
-      _ <- groupRepository.update(deleted.group, GroupRepository.RemoveTask(deleted.id))
     } yield deleted.toResponse
 }

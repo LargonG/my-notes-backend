@@ -74,10 +74,7 @@ object Main extends IOApp {
         val userRepo = UserRepository.inMemory(userCache)
         val taskRepo = TaskRepository.inMemory(taskCache)
         val groupRepo = GroupRepository.inMemory(groupCache)
-        val boardRepo =
-          BoardRepository.mix(
-            BoardRepository.inMemory(boardCache),
-          )
+        val boardRepo = BoardRepository.inMemory(boardCache)
         val commentRepo = CommentRepository.inMemory(commentCache)
         val fileRepo = FileRepository.inMemory(fileCache)
 

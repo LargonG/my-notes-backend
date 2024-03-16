@@ -48,7 +48,9 @@ object CommentRequest {
     }
 }
 
-final case class CommentId(inner: UUID) extends AnyVal
+final case class CommentId(inner: UUID) extends AnyVal {
+  override def toString: String = inner.toString
+}
 
 object CommentId {
   implicit val commentIdEncoder: Encoder[CommentId] =

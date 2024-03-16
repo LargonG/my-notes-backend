@@ -4,5 +4,5 @@ CREATE TABLE comment (
     author          uuid NOT NULL,
     content_text    text NOT NULL,
     content_files   uuid[] NOT NULL,
-    created_at      time NOT NULL
+    created_at      timestamp NOT NULL
 )

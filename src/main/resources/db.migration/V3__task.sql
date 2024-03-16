@@ -7,6 +7,6 @@ CREATE TABLE task (
     status          VARCHAR(256) NOT NULL,
     content_text    text NOT NULL,
     content_files   uuid[] NOT NULL,
-    createdAt       TIME NOT NULL,
-    updatedAt       TIME NOT NULL
+    createdAt       timestamp NOT NULL,
+    updatedAt       timestamp NOT NULL
 )

@@ -12,32 +12,33 @@ import doobie.Transactor
 import doobie.implicits._
 
 class BoardRepositoryPostgresql[F[_]: MonadCancelThrow](implicit tr: Transactor[F])
-    extends BoardRepository[F] {
+    extends BoardRepository[F]
+    with QuillInstances {
 
   private val ctx = new DoobieContext.Postgres(SnakeCase)
   import ctx._
 
   override def create(board: Board): F[Long] = run {
     quote {
-      querySchema[Board]("board").insertValue(lift(board))
+      query[Board].insertValue(lift(board))
     }
   }.transact(tr)
 
   override def get(id: Board.BoardId): OptionT[F, Board] = OptionT(run {
     quote {
-      querySchema[Board]("board").filter(_.id == lift(id))
+      query[Board].filter(_.id == lift(id))
     }
   }.transact(tr).map(_.headOption))
 
   override def all: F[List[Board]] = run {
     quote {
-      querySchema[Board]("board")
+      query[Board]
     }
   }.transact(tr)
 
   override def list(userId: User.UserId): OptionT[F, List[Board]] = OptionT.liftF(run {
     quote {
-      querySchema[Board]("board").filter(_.owner == lift(userId))
+      query[Board].filter(_.owner == lift(userId))
     }
   }.transact(tr))
 
@@ -49,7 +50,7 @@ class BoardRepositoryPostgresql[F[_]: MonadCancelThrow](implicit tr: Transactor[
       board <- OptionT(
         run {
           quote {
-            querySchema[Board]("board").filter(_.id == lift(id))
+            query[Board].filter(_.id == lift(id))
           }
         }.map(_.headOption),
       )
@@ -57,7 +58,7 @@ class BoardRepositoryPostgresql[F[_]: MonadCancelThrow](implicit tr: Transactor[
       _ <- OptionT.liftF(
         run {
           quote {
-            querySchema[Board]("board").filter(_.id == lift(id)).updateValue(lift(newBoard))
+            query[Board].filter(_.id == lift(id)).updateValue(lift(newBoard))
           }
         },
       )
@@ -65,7 +66,7 @@ class BoardRepositoryPostgresql[F[_]: MonadCancelThrow](implicit tr: Transactor[
 
   override def delete(id: Board.BoardId): OptionT[F, Board] = OptionT(run {
     quote {
-      querySchema[Board]("board").filter(_.id == lift(id)).delete.returningMany(r => r)
+      query[Board].filter(_.id == lift(id)).delete.returningMany(r => r)
     }
   }.transact(tr).map(_.headOption))
 }

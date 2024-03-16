@@ -54,7 +54,9 @@ object PageUpdateRequest {
   }
 }
 
-final case class PageId(inner: UUID) extends AnyVal
+final case class PageId(inner: UUID) extends AnyVal {
+  override def toString: String = inner.toString
+}
 
 object PageId {
   implicit val pageIdEncoder: Encoder[PageId] = Encoder.encodeUUID.contramap(_.inner)

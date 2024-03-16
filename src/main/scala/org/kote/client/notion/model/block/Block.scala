@@ -109,7 +109,9 @@ object ParagraphRequest {
     }
 }
 
-final case class BlockId(inner: UUID) extends AnyVal
+final case class BlockId(inner: UUID) extends AnyVal {
+  override def toString: String = inner.toString
+}
 
 object BlockId {
   implicit val blockIdEncoder: Encoder[BlockId] = Encoder.encodeUUID.contramap(_.inner)

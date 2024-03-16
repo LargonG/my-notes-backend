@@ -20,7 +20,9 @@ object RichText {
 
 final case class Text(
     content: String,
-) extends RichText
+) extends RichText {
+  override def toString: String = content
+}
 
 object Text {
   implicit val textEncoder: Encoder[Text] =

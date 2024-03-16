@@ -12,19 +12,19 @@ import org.kote.config.AppConfig
 import org.kote.controller._
 import org.kote.database.FlywayMigration
 import org.kote.database.transactor.makeTransactor
-import org.kote.domain.board.Board
-import org.kote.domain.board.Board.BoardId
 import org.kote.domain.comment.Comment
 import org.kote.domain.comment.Comment.CommentId
 import org.kote.domain.group.Group
 import org.kote.domain.group.Group.GroupId
 import org.kote.domain.task.Task
 import org.kote.domain.task.Task.TaskId
-import org.kote.domain.user.User
-import org.kote.domain.user.User.UserId
 import org.kote.repository._
+import org.kote.repository.postgresql.integration.notion.{
+  NotionDatabaseIntegrationRepositoryPostgresql,
+  NotionMainPageIntegrationRepositoryPostgresql,
+  NotionUserIntegrationRepositoryPostgresql,
+}
 import org.kote.service._
-import org.kote.service.notion.v1.PropertyId
 import pureconfig.ConfigSource
 import pureconfig.generic.auto._
 import sttp.client3.SttpBackend
@@ -37,26 +37,12 @@ object Main extends IOApp.Simple {
     val ioConfig = IO.delay(ConfigSource.default.loadOrThrow[AppConfig])
 
     ioConfig.flatMap(config =>
-      makeTransactor[IO](config.database).use { _: Transactor[IO] =>
+      makeTransactor[IO](config.database).use { implicit tr: Transactor[IO] =>
         for {
           _ <- FlywayMigration.migrate[IO](config.database)
-          userCache <- Cache.ram[IO, UserId, User]
           taskCache <- Cache.ram[IO, TaskId, Task]
           groupCache <- Cache.ram[IO, GroupId, Group]
-          boardCache <- Cache.ram[IO, BoardId, Board]
           commentCache <- Cache.ram[IO, CommentId, Comment]
-
-          boardDb <- Cache.ram[IO, BoardId, NotionDatabaseId]
-          dbBoard <- Cache.ram[IO, NotionDatabaseId, BoardId]
-
-          userPage <- Cache.ram[IO, UserId, NotionPageId]
-          pageUser <- Cache.ram[IO, NotionPageId, UserId]
-
-          userToNotionUser <- Cache.ram[IO, UserId, NotionUserId]
-          notionUserToUser <- Cache.ram[IO, NotionUserId, UserId]
-
-          groupProperty <- Cache.ram[IO, GroupId, PropertyId]
-          propertyGroup <- Cache.ram[IO, PropertyId, GroupId]
 
           endpoints <- IO.delay {
             val backend: SttpBackend[IO, Any] =
@@ -73,18 +59,15 @@ object Main extends IOApp.Simple {
             val notionUserClient: NotionUserClient[IO] =
               NotionUserClient.http(backend, notionConfig)
 
-            val userRepo = UserRepository.inMemory(userCache)
+            val userRepo = UserRepository.postgres[IO]
             val taskRepo = TaskRepository.inMemory(taskCache)
             val groupRepo = GroupRepository.inMemory(groupCache)
-            val boardRepo = BoardRepository.inMemory(boardCache)
+            val boardRepo = BoardRepository.postgres[IO]
             val commentRepo = CommentRepository.inMemory(commentCache)
 
-            val databaseIntegration = IntegrationRepository.inMemory(boardDb, dbBoard)
-            val userMainPageIntegration = IntegrationRepository.inMemory(userPage, pageUser)
-            val userToNotionUserIntegration =
-              IntegrationRepository.inMemory(userToNotionUser, notionUserToUser)
-            val groupToPropertyIntegration =
-              IntegrationRepository.inMemory(groupProperty, propertyGroup)
+            val databaseIntegration = new NotionDatabaseIntegrationRepositoryPostgresql[IO]
+            val userMainPageIntegration = new NotionMainPageIntegrationRepositoryPostgresql[IO]
+            val userToNotionUserIntegration = new NotionUserIntegrationRepositoryPostgresql[IO]
 
             List(
               UserController.make(
@@ -110,7 +93,6 @@ object Main extends IOApp.Simple {
                   databaseIntegration,
                   userMainPageIntegration,
                   userToNotionUserIntegration,
-                  groupToPropertyIntegration,
                 ),
               ),
               CommentController.make(CommentService.fromRepository(commentRepo)),

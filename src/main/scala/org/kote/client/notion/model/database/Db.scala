@@ -68,7 +68,9 @@ object DbUpdateRequest {
     }
 }
 
-final case class DbId(inner: UUID) extends AnyVal
+final case class DbId(inner: UUID) extends AnyVal {
+  override def toString: String = inner.toString
+}
 
 object DbId {
   implicit val dbIdEncoder: Encoder[DbId] = Encoder.encodeUUID.contramap(_.inner)

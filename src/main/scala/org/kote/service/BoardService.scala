@@ -9,10 +9,9 @@ import cats.syntax.functor._
 import org.kote.client.notion.{NotionDatabaseClient, NotionDatabaseId, NotionPageId, NotionUserId}
 import org.kote.domain.board.Board.BoardId
 import org.kote.domain.board.{Board, BoardResponse, CreateBoard}
-import org.kote.domain.group.Group.GroupId
 import org.kote.domain.user.User.UserId
 import org.kote.repository.{BoardRepository, GroupRepository, IntegrationRepository, TaskRepository}
-import org.kote.service.notion.v1.{NotionBoardService, PropertyId}
+import org.kote.service.notion.v1.NotionBoardService
 
 trait BoardService[F[_]] {
   def create(
@@ -42,7 +41,6 @@ object BoardService {
       databaseIntegration: IntegrationRepository[F, BoardId, NotionDatabaseId],
       userMainPageIntegration: IntegrationRepository[F, UserId, NotionPageId],
       userToUserIntegration: IntegrationRepository[F, UserId, NotionUserId],
-      propertyIntegration: IntegrationRepository[F, GroupId, PropertyId],
   ): BoardService[F] =
     new NotionBoardService[F](
       boardRepository,
@@ -52,7 +50,6 @@ object BoardService {
       databaseIntegration,
       userMainPageIntegration,
       userToUserIntegration,
-      propertyIntegration,
     )
 }
 

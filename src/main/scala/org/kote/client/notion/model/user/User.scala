@@ -33,7 +33,9 @@ object UserRequest {
     Encoder.forProduct2("object", "id")(source => ("user", source.id))
 }
 
-final case class UserId(inner: UUID) extends AnyVal
+final case class UserId(inner: UUID) extends AnyVal {
+  override def toString: String = inner.toString
+}
 
 object UserId {
   implicit val userIdEncoder: Encoder[UserId] = Encoder.encodeUUID.contramap(_.inner)

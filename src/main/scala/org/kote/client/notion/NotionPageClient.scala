@@ -45,6 +45,7 @@ final class NotionPageHttpClient[F[_]: Async](
 ) extends NotionPageClient[F] {
   private val baseUrl = s"${config.url}/$v1"
   private val pages = s"$baseUrl/pages"
+  private val search = s"$baseUrl/search"
 
   override def create(request: PageRequest): OptionT[F, PageResponse] =
     OptionT(
@@ -61,7 +62,7 @@ final class NotionPageHttpClient[F[_]: Async](
     def tick(cursor: Option[Cursor]): OptionT[F, PaginatedList[PageResponse]] =
       OptionT(
         basicRequestWithHeaders
-          .post(uri"$baseUrl/search")
+          .post(uri"$search")
           .body(request.copy(cursor = cursor))
           .response(unwrap[F, PaginatedList[PageResponse]])
           .readTimeout(config.timeout)

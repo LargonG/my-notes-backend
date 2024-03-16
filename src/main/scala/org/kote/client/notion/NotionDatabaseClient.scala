@@ -66,6 +66,7 @@ final class NotionDatabaseHttpClient[F[_]: Async](
 ) extends NotionDatabaseClient[F] {
   private val baseUrl = s"${config.url}/$v1"
   private val databases = s"$baseUrl/databases"
+  private val search = s"$baseUrl/search"
 
   /** Создаёт новую базу данных в notion "Create" endpoint в notion api
     * @param request
@@ -106,7 +107,7 @@ final class NotionDatabaseHttpClient[F[_]: Async](
     def tick(cursor: Option[Cursor]): OptionT[F, PaginatedList[DbResponse]] =
       OptionT(
         basicRequestWithHeaders
-          .post(uri"$baseUrl/search")
+          .post(uri"$search")
           .body(request.copy(cursor = cursor))
           .response(unwrap[F, PaginatedList[DbResponse]])
           .readTimeout(config.timeout)
@@ -131,6 +132,7 @@ final class NotionDatabaseHttpClient[F[_]: Async](
         if (cursor.isEmpty) { // 10 минут требуют быстрых решений
           basicRequestWithHeaders
             .post(uri"$databases/$id/query")
+            .body()
             .response(unwrap[F, PaginatedList[PageResponse]])
             .readTimeout(config.timeout)
             .send(sttpBackend)

@@ -1,5 +1,6 @@
 # idea
 .idea/
+.run/
 
 # visual studio code
 .vscode/

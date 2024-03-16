@@ -6,6 +6,8 @@ import cats.{Applicative, ApplicativeThrow, Monad}
 import io.circe.syntax.EncoderOps
 import io.circe.{Decoder, Encoder, Json}
 import org.kote.client.notion.configuration.NotionConfiguration
+import org.kote.client.notion.model.block.request.BlockRequest
+import org.kote.client.notion.model.block.response.BlockResponse
 import org.kote.client.notion.model.list.PaginatedList
 import org.kote.client.notion.model.list.PaginatedList.Cursor
 import sttp.client3.circe.asJsonAlways
@@ -54,8 +56,8 @@ package object notion {
 
   // Block //
   type NotionBlockId = model.block.BlockId
-  type NotionBlockRequest = model.block.BlockRequest
-  type NotionBlockResponse = model.block.BlockResponse
+  type NotionBlockRequest = BlockRequest
+  type NotionBlockResponse = BlockResponse
 
   // Comment //
   type NotionCommentId = model.comment.CommentId

@@ -1,7 +1,7 @@
 package org.kote.client.notion.model.page
 
 import io.circe.{Decoder, Encoder}
-import org.kote.client.notion.model.block.BlockRequest
+import org.kote.client.notion.model.block.request.BlockRequest
 import org.kote.client.notion.model.parent.{DatabaseParent, Parent}
 import org.kote.client.notion.model.user.UserResponse
 

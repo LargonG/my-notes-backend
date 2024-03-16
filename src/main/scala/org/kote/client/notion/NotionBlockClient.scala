@@ -4,7 +4,9 @@ import cats.data.OptionT
 import cats.effect.kernel.Async
 import cats.implicits.toFlatMapOps
 import org.kote.client.notion.configuration.NotionConfiguration
-import org.kote.client.notion.model.block.{BlockId, BlockRequest, BlockResponse}
+import org.kote.client.notion.model.block.response.BlockResponse
+import org.kote.client.notion.model.block.BlockId
+import org.kote.client.notion.model.block.request.BlockRequest
 import org.kote.client.notion.model.list.PaginatedList
 import org.kote.client.notion.model.list.PaginatedList.Cursor
 import org.kote.client.notion.model.page.PageId

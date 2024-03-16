@@ -1,6 +1,6 @@
 package org.kote.client.notion.model.page
 
-import org.kote.client.notion.model.block.BlockResponse
+import org.kote.client.notion.model.block.response.BlockResponse
 
 /** Объединяет поля properties у page и children blocks
   *

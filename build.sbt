@@ -51,6 +51,7 @@ lazy val root = (project in file("."))
 
       // enumeratum
       "com.beachape" %% "enumeratum" % enumeratumVersion,
+      "com.beachape" %% "enumeratum-circe" % circeEnumeratumVersion,
 
       // doobie + quill
       "io.getquill" %% "quill-doobie" % quillVersion,
@@ -95,6 +96,7 @@ lazy val root = (project in file("."))
 
 val tethysVersion = "0.26.0"
 val circeVersion = "0.14.1"
+val circeEnumeratumVersion = "1.7.3"
 
 val enumeratumVersion = "1.7.2"
 

@@ -1,6 +1,6 @@
 package org.kote.client.notion.model.block
 
-import enumeratum.{Enum, EnumEntry}
+import enumeratum.{CirceEnum, Enum, EnumEntry}
 import cats.implicits.toFunctorOps
 import io.circe.syntax.EncoderOps
 import io.circe.{Decoder, Encoder}
@@ -10,7 +10,7 @@ sealed trait BlockType extends EnumEntry {
   val value: String
 }
 
-object BlockType extends Enum[BlockType] {
+object BlockType extends Enum[BlockType] with CirceEnum[BlockType] {
   implicit def asString(me: BlockType): String = me.value
 
   implicit val encoder: Encoder[BlockType] =

@@ -7,6 +7,8 @@ import org.kote.client.notion.configuration.NotionConfiguration
 import org.kote.client.notion.model.list.PaginatedList
 import org.kote.client.notion.model.list.PaginatedList.Cursor
 import org.kote.client.notion.model.page._
+import org.kote.client.notion.model.page.request.{PageRequest, PageSearchRequest, PageUpdateRequest}
+import org.kote.client.notion.model.page.response.PageResponse
 import org.kote.client.notion.model.property.PropertyItem
 import sttp.client3.circe._
 import sttp.client3.{SttpBackend, UriContext}

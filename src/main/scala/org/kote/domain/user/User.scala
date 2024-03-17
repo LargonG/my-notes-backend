@@ -21,6 +21,7 @@ final case class User(
       name,
       password.inner,
       registeredIn,
+      notionUserResponse.map(_.id),
       notionUserResponse.flatMap(_.name),
     )
 

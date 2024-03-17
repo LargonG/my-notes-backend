@@ -1,8 +1,9 @@
 package org.kote.client.notion.page
 
 import io.circe.parser.decode
-import org.kote.client.notion.model.database.DbId
-import org.kote.client.notion.model.page.{PageId, PagePropertyResponse, PageResponse}
+import org.kote.client.notion.model.database.DatabaseId
+import org.kote.client.notion.model.page.response.{PagePropertyResponse, PageResponse}
+import org.kote.client.notion.model.page.{PageId, response}
 import org.kote.client.notion.model.parent.Parent
 import org.kote.client.notion.model.user.{UserId, UserResponse}
 import org.scalatest.flatspec.AnyFlatSpec
@@ -152,13 +153,13 @@ class PageResponseSpec extends AnyFlatSpec with Matchers {
         |}
         |""".stripMargin
 
-    val defaultValue = PageResponse(
+    val defaultValue = response.PageResponse(
       PageId(UUID.fromString("2c89ef22-e18b-4d2d-9337-8b03ab5c3507")),
       UserResponse(
         UserId(UUID.fromString("d610ba71-8ae3-4373-9c28-e78a97a2dd05")),
         None,
       ),
-      Parent.db(DbId(UUID.fromString("525718c6-4cbd-4e96-b944-07a65d1ed07a"))),
+      Parent.db(DatabaseId(UUID.fromString("525718c6-4cbd-4e96-b944-07a65d1ed07a"))),
       archived = false,
       Map(),
     )

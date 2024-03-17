@@ -1,19 +1,9 @@
-package org.kote.client.notion.model.page
+package org.kote.client.notion.model.page.response
 
-import cats.implicits.toFunctorOps
 import io.circe.Decoder
 import io.circe.generic.semiauto.deriveDecoder
 import org.kote.client.notion.model.file.FileHeader
-import org.kote.client.notion.model.property.{
-  FilesType,
-  OtherType,
-  PeopleType,
-  PropertyType,
-  RichTextType,
-  SelectType,
-  StatusType,
-  TitleType,
-}
+import org.kote.client.notion.model.property._
 import org.kote.client.notion.model.text.RichText
 import org.kote.client.notion.model.user.UserResponse
 
@@ -53,11 +43,7 @@ sealed trait PagePropertyResponseValue
 
 case object PageOtherPropertyResponseValue extends PagePropertyResponseValue {
   implicit val decoder: Decoder[PageOtherPropertyResponseValue.type] =
-    List[Decoder[Any]](
-      Decoder.decodeString.widen,
-      Decoder.decodeJsonNumber.widen,
-      Decoder.decodeJsonObject.widen,
-    ).reduceLeft(_ or _).map(_ => PageOtherPropertyResponseValue)
+    Decoder.decodeJson.map(_ => PageOtherPropertyResponseValue)
 }
 
 final case class PageFilesPropertyResponse(files: List[FileHeader])

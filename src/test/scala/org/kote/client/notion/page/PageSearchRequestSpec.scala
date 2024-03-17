@@ -1,7 +1,7 @@
 package org.kote.client.notion.page
 
 import io.circe.syntax.EncoderOps
-import org.kote.client.notion.model.page.PageSearchRequest
+import org.kote.client.notion.model.page.request.PageSearchRequest
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 

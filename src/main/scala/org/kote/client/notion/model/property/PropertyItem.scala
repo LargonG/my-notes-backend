@@ -4,7 +4,7 @@ import cats.implicits.toFunctorOps
 import io.circe.Decoder
 import org.kote.client.notion.model.file.File
 import org.kote.client.notion.model.list.PaginatedList
-import org.kote.client.notion.model.page.PageSelectPropertyResponse
+import org.kote.client.notion.model.page.response.PageSelectPropertyResponse
 import org.kote.client.notion.model.text.RichText
 import org.kote.client.notion.model.user.UserResponse
 

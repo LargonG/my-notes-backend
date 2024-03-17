@@ -1,5 +1,6 @@
 package org.kote.domain.user
 
+import org.kote.client.notion.NotionUserId
 import org.kote.common.tethys.TethysInstances
 import sttp.tapir.Schema
 import tethys.derivation.semiauto.{jsonReader, jsonWriter}
@@ -42,6 +43,7 @@ final case class UnsafeUserResponse(
     name: String,
     password: String,
     registeredIn: Instant,
+    notionUserId: Option[NotionUserId],
     notionUserName: Option[String],
 )
 
@@ -51,6 +53,13 @@ object UnsafeUserResponse extends TethysInstances {
 
   @nowarn
   implicit val unsafeUserResponseWriter: JsonWriter[UnsafeUserResponse] = jsonWriter
+
+  implicit val notionUserIdSchema: Schema[NotionUserId] =
+    Schema.schemaForUUID
+      .map(uuid => Some(org.kote.client.notion.model.user.UserId(uuid)))(notionUserId =>
+        notionUserId.inner,
+      )
+      .description("uuid пользователя в notion")
 
   implicit val unsafeUserResponseSchema: Schema[UnsafeUserResponse] =
     Schema.derived.description("Подробные данные о пользователе")

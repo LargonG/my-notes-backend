@@ -1,5 +1,6 @@
 package org.kote.common.tethys
 
+import org.kote.client.notion.NotionUserId
 import tethys.{JsonReader, JsonWriter}
 
 import java.net.{URI, URL}
@@ -15,4 +16,9 @@ trait TethysInstances {
 
   implicit val urlReader: JsonReader[URL] = JsonReader[String].map(URI.create(_).toURL)
   implicit val urlWriter: JsonWriter[URL] = JsonWriter[String].contramap(_.toString)
+
+  implicit val notionUSerIdReader: JsonReader[NotionUserId] =
+    JsonReader[UUID].map(org.kote.client.notion.model.user.UserId(_))
+  implicit val notionUserIdWriter: JsonWriter[NotionUserId] =
+    JsonWriter[UUID].contramap(_.inner)
 }

@@ -4,16 +4,16 @@ import cats.data.OptionT
 import cats.effect.kernel.Async
 import cats.implicits.{toFlatMapOps, toFunctorOps}
 import org.kote.client.notion.configuration.NotionConfiguration
-import org.kote.client.notion.model.database.{
-  DbId,
-  DbRequest,
-  DbResponse,
-  DbSearchRequest,
-  DbUpdateRequest,
+import org.kote.client.notion.model.database.request.{
+  DatabaseRequest,
+  DatabaseSearchRequest,
+  DatabaseUpdateRequest,
 }
+import org.kote.client.notion.model.database.response.DatabaseResponse
+import org.kote.client.notion.model.database.DatabaseId
 import org.kote.client.notion.model.list.PaginatedList
 import org.kote.client.notion.model.list.PaginatedList.Cursor
-import org.kote.client.notion.model.page.PageResponse
+import org.kote.client.notion.model.page.response.PageResponse
 import sttp.client3.circe._
 import sttp.client3.{SttpBackend, UriContext}
 
@@ -74,12 +74,12 @@ final class NotionDatabaseHttpClient[F[_]: Async](
     * @return
     *   ответ сервера notion, только что созданная база данных
     */
-  override def create(request: DbRequest): OptionT[F, DbResponse] =
+  override def create(request: DatabaseRequest): OptionT[F, DatabaseResponse] =
     OptionT(
       basicRequestWithHeaders
         .post(uri"$databases")
         .body(request)
-        .response(unwrap[F, DbResponse])
+        .response(unwrap[F, DatabaseResponse])
         .readTimeout(config.timeout)
         .send(sttpBackend)
         .flatMap(optionIfSuccess(_)),
@@ -92,24 +92,24 @@ final class NotionDatabaseHttpClient[F[_]: Async](
     * @return
     *   характеристику базы данных, если она существует
     */
-  override def get(id: DbId): OptionT[F, DbResponse] =
+  override def get(id: DatabaseId): OptionT[F, DatabaseResponse] =
     OptionT(
       basicRequestWithHeaders
         .get(uri"$databases/$id")
-        .response(unwrap[F, DbResponse])
+        .response(unwrap[F, DatabaseResponse])
         .readTimeout(config.timeout)
         .send(sttpBackend)
         .map(optionIfSuccess(_))
         .flatten,
     )
 
-  override def search(request: DbSearchRequest): OptionT[F, List[DbResponse]] = {
-    def tick(cursor: Option[Cursor]): OptionT[F, PaginatedList[DbResponse]] =
+  override def search(request: DatabaseSearchRequest): OptionT[F, List[DatabaseResponse]] = {
+    def tick(cursor: Option[Cursor]): OptionT[F, PaginatedList[DatabaseResponse]] =
       OptionT(
         basicRequestWithHeaders
           .post(uri"$search")
           .body(request.copy(cursor = cursor))
-          .response(unwrap[F, PaginatedList[DbResponse]])
+          .response(unwrap[F, PaginatedList[DatabaseResponse]])
           .readTimeout(config.timeout)
           .send(sttpBackend)
           .flatMap(optionIfSuccess(_)),
@@ -126,7 +126,7 @@ final class NotionDatabaseHttpClient[F[_]: Async](
     *   Список всех страниц, любой длины, если существует база данных с таким id и мы имеем к ней
     *   доступ
     */
-  override def list(id: DbId): OptionT[F, List[PageResponse]] = {
+  override def list(id: DatabaseId): OptionT[F, List[PageResponse]] = {
     def tick(cursor: Option[Cursor]): OptionT[F, PaginatedList[PageResponse]] =
       OptionT(
         if (cursor.isEmpty) { // 10 минут требуют быстрых решений
@@ -153,12 +153,15 @@ final class NotionDatabaseHttpClient[F[_]: Async](
     concatPaginatedLists(tick)
   }
 
-  override def update(id: DbId, request: DbUpdateRequest): OptionT[F, DbResponse] =
+  override def update(
+      id: DatabaseId,
+      request: DatabaseUpdateRequest,
+  ): OptionT[F, DatabaseResponse] =
     OptionT(
       basicRequestWithHeaders
         .patch(uri"$databases/$id")
         .body(request)
-        .response(unwrap[F, DbResponse])
+        .response(unwrap[F, DatabaseResponse])
         .readTimeout(config.timeout)
         .send(sttpBackend)
         .flatMap(optionIfSuccess(_)),

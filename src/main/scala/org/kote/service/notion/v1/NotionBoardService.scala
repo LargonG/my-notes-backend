@@ -6,7 +6,7 @@ import cats.effect.std.UUIDGen
 import cats.implicits.{toFlatMapOps, toTraverseOps}
 import cats.syntax.functor._
 import org.kote.client.notion._
-import org.kote.client.notion.model.database.DbSearchRequest
+import org.kote.client.notion.model.database.request.DatabaseSearchRequest
 import org.kote.domain.board.Board.BoardId
 import org.kote.domain.board.{Board, BoardResponse, CreateBoard}
 import org.kote.domain.user.User
@@ -62,7 +62,7 @@ class NotionBoardService[F[_]: Monad: UUIDGen](
   override def importFromIntegration(userId: UserId): F[Option[List[BoardResponse]]] =
     (for {
       notionUser <- userToUserIntegration.getByKey(userId)
-      lists <- notionDatabaseClient.search(DbSearchRequest(None, None))
+      lists <- notionDatabaseClient.search(DatabaseSearchRequest(None, None))
       madeByNotionUser = lists.filter(_.createdBy.id == notionUser)
       results <- madeByNotionUser.traverse(database =>
         for {

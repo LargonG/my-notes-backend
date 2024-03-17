@@ -1,8 +1,8 @@
-package org.kote.client.notion.model.page
+package org.kote.client.notion.model.page.request
 
-import io.circe.{Encoder, Json}
 import io.circe.generic.semiauto.deriveEncoder
 import io.circe.syntax.EncoderOps
+import io.circe.{Encoder, Json}
 import org.kote.client.notion.model.file.FileHeader
 import org.kote.client.notion.model.text.RichText
 import org.kote.client.notion.model.user.UserRequest

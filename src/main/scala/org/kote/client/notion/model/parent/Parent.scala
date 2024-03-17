@@ -2,13 +2,13 @@ package org.kote.client.notion.model.parent
 
 import cats.implicits.toFunctorOps
 import io.circe.{Decoder, Encoder}
-import org.kote.client.notion.model.database.DbId
+import org.kote.client.notion.model.database.DatabaseId
 import org.kote.client.notion.model.page.PageId
 
 sealed trait Parent
 
 object Parent {
-  def db(id: DbId): DatabaseParent = DatabaseParent(id)
+  def db(id: DatabaseId): DatabaseParent = DatabaseParent(id)
 
   def page(id: PageId): PageParent = PageParent(id)
 
@@ -22,7 +22,7 @@ object Parent {
     ).reduceLeft(_ or _)
 }
 
-final case class DatabaseParent(id: DbId) extends Parent
+final case class DatabaseParent(id: DatabaseId) extends Parent
 
 object DatabaseParent {
   implicit val databaseParentEncoder: Encoder[DatabaseParent] =

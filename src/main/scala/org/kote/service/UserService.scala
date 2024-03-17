@@ -9,7 +9,7 @@ import cats.syntax.functor._
 import cats.{Monad, MonadThrow}
 import org.kote.client.notion.{NotionPageClient, NotionPageId, NotionUserClient, NotionUserId}
 import org.kote.domain.user.User.UserId
-import org.kote.domain.user.{CreateUser, UnsafeUserResponse, User, UserResponse}
+import org.kote.domain.user.{CreateUser, ExternalUser, UnsafeUserResponse, User, UserResponse}
 import org.kote.repository._
 import org.kote.service.notion.v1.NotionUserService
 
@@ -58,6 +58,8 @@ trait UserService[F[_]] {
     *   полную информацию удалённого пользователя
     */
   def delete(id: UserId): OptionT[F, UnsafeUserResponse]
+
+  def linkToExternalUser(id: UserId, externalUser: ExternalUser): F[Option[UnsafeUserResponse]]
 }
 
 object UserService {
@@ -124,4 +126,10 @@ class RepositoryUserService[F[_]: UUIDGen: Monad: Clock](
       tasks <- boards.traverse(board => taskRepository.listByBoard(board.id)).map(_.flatten)
       _ <- tasks.traverse(task => taskRepository.delete(task.id))
     } yield deleted.toUnsafeResponse()
+
+  override def linkToExternalUser(
+      id: UserId,
+      externalUser: ExternalUser,
+  ): F[Option[UnsafeUserResponse]] =
+    userRepository.get(id).map(_.toUnsafeResponse()).value
 }

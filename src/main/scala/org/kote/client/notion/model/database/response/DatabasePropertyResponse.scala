@@ -1,9 +1,9 @@
-package org.kote.client.notion.model.database
+package org.kote.client.notion.model.database.response
 
 import io.circe.Decoder
 import io.circe.generic.semiauto.deriveDecoder
-import org.kote.client.notion.model.database.DbSelectPropertyResponse.SelectOption
-import org.kote.client.notion.model.database.DbStatusPropertyResponse.StatusOption
+import org.kote.client.notion.model.database.response.DbSelectPropertyResponse.SelectOption
+import org.kote.client.notion.model.database.response.DbStatusPropertyResponse.StatusOption
 import org.kote.client.notion.model.property._
 
 /** Общие поля для всех типов свойств базы данных
@@ -14,14 +14,14 @@ import org.kote.client.notion.model.property._
   * @param value
   *   значение свойства (в json зависит от того, как задан "type")
   */
-final case class DbPropertyResponse(
+final case class DatabasePropertyResponse(
     id: String,
     name: String,
     value: DbPropertyValueResponse,
 )
 
-object DbPropertyResponse {
-  implicit val dbPropertyResponseDecoder: Decoder[DbPropertyResponse] =
+object DatabasePropertyResponse {
+  implicit val dbPropertyResponseDecoder: Decoder[DatabasePropertyResponse] =
     Decoder.instance { cursor =>
       for {
         id <- cursor.get[String]("id")
@@ -36,14 +36,15 @@ object DbPropertyResponse {
           case SelectType   => cursor.get[DbSelectPropertyResponse](valueType)
           case OtherType(_) => cursor.get[DbOtherPropertyResponse.type](valueType)
         }
-      } yield DbPropertyResponse(id, name, value)
+      } yield DatabasePropertyResponse(id, name, value)
     }
 }
 
 sealed trait DbPropertyValueResponse
 
 case object DbOtherPropertyResponse extends DbPropertyValueResponse {
-  implicit val dbOtherPropertyResponseDecoder: Decoder[DbOtherPropertyResponse.type] = deriveDecoder
+  implicit val dbOtherPropertyResponseDecoder: Decoder[DbOtherPropertyResponse.type] =
+    Decoder.decodeJson.map(_ => DbOtherPropertyResponse)
 }
 
 /** Колонка хранения файлов */

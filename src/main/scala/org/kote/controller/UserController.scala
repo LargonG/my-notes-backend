@@ -1,14 +1,17 @@
 package org.kote.controller
 
 import org.kote.common.controller.Controller
+import org.kote.common.tethys.TethysInstances
 import org.kote.domain.user.User.UserId
-import org.kote.domain.user.{CreateUser, UnsafeUserResponse, UserResponse}
+import org.kote.domain.user.{CreateUser, NotionUser, UnsafeUserResponse, UserResponse}
 import org.kote.service.UserService
 import sttp.tapir._
 import sttp.tapir.json.tethysjson.jsonBody
 import sttp.tapir.server.ServerEndpoint
 
-class UserController[F[_]](userService: UserService[F]) extends Controller[F] {
+import java.util.UUID
+
+class UserController[F[_]](userService: UserService[F]) extends Controller[F] with TethysInstances {
   private val standardPath: EndpointInput[Unit] = "api" / "v1" / "user"
   private val pathWithUserId: EndpointInput[UserId] = standardPath / path[UserId]("userId")
 
@@ -41,8 +44,25 @@ class UserController[F[_]](userService: UserService[F]) extends Controller[F] {
       .out(jsonBody[Option[UnsafeUserResponse]])
       .serverLogicSuccess(userService.delete(_).value)
 
+  private val linkExternalUser: ServerEndpoint[Any, F] =
+    endpoint.post
+      .summary("Связать пользователя со сторонним клиентом")
+      .in(
+        pathWithUserId / query[Option[UUID]]("notion_user_id") / query[Option[String]](
+          "notion_user_name",
+        ),
+      )
+      .out(jsonBody[Option[UnsafeUserResponse]])
+      .serverLogicSuccess(tuple =>
+        userService
+          .linkToExternalUser(
+            tuple._1,
+            NotionUser(tuple._2.map(org.kote.client.notion.model.user.UserId.apply), tuple._3),
+          ),
+      )
+
   override def endpoints: List[ServerEndpoint[Any, F]] =
-    List(createUser, listUsers, getUser, deleteUser).map(_.withTag("User"))
+    List(createUser, listUsers, getUser, deleteUser, linkExternalUser).map(_.withTag("User"))
 }
 
 object UserController {

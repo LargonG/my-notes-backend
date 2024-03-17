@@ -8,8 +8,16 @@ import io.circe.{Decoder, Encoder, Json}
 import org.kote.client.notion.configuration.NotionConfiguration
 import org.kote.client.notion.model.block.request.BlockRequest
 import org.kote.client.notion.model.block.response.BlockResponse
+import org.kote.client.notion.model.database.request.{
+  DatabaseRequest,
+  DatabaseSearchRequest,
+  DatabaseUpdateRequest,
+}
+import org.kote.client.notion.model.database.response.DatabaseResponse
 import org.kote.client.notion.model.list.PaginatedList
 import org.kote.client.notion.model.list.PaginatedList.Cursor
+import org.kote.client.notion.model.page.request.{PageRequest, PageSearchRequest, PageUpdateRequest}
+import org.kote.client.notion.model.page.response.PageResponse
 import sttp.client3.circe.asJsonAlways
 import sttp.client3.{Empty, RequestT, Response, ResponseAs, basicRequest}
 
@@ -35,24 +43,24 @@ import sttp.client3.{Empty, RequestT, Response, ResponseAs, basicRequest}
   */
 package object notion {
   // Database //
-  type NotionDatabaseId = model.database.DbId
+  type NotionDatabaseId = model.database.DatabaseId
 
-  type NotionDatabaseCreateRequest = model.database.DbRequest
-  type NotionDatabasePropertiesUpdateRequest = model.database.DbUpdateRequest
-  type NotionDatabaseSearchRequest = model.database.DbSearchRequest
+  type NotionDatabaseCreateRequest = DatabaseRequest
+  type NotionDatabasePropertiesUpdateRequest = DatabaseUpdateRequest
+  type NotionDatabaseSearchRequest = DatabaseSearchRequest
 
-  type NotionDatabasePropertiesUpdateResponse = model.database.DbResponse
-  type NotionDatabaseResponse = model.database.DbResponse
+  type NotionDatabasePropertiesUpdateResponse = DatabaseResponse
+  type NotionDatabaseResponse = DatabaseResponse
 
   // Page //
   type NotionPageId = model.page.PageId
 
-  type NotionPageCreateRequest = model.page.PageRequest
-  type NotionPagePropertiesUpdateRequest = model.page.PageUpdateRequest
-  type NotionPageSearchRequest = model.page.PageSearchRequest
+  type NotionPageCreateRequest = PageRequest
+  type NotionPagePropertiesUpdateRequest = PageUpdateRequest
+  type NotionPageSearchRequest = PageSearchRequest
 
   type NotionPagePropertyItemResponse = model.property.PropertyItem
-  type NotionPageResponse = model.page.PageResponse
+  type NotionPageResponse = PageResponse
 
   // Block //
   type NotionBlockId = model.block.BlockId

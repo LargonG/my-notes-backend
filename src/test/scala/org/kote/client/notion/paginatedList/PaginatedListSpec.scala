@@ -5,7 +5,7 @@ import org.kote.client.notion.model.user.UserResponse
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import io.circe.parser._
-import org.kote.client.notion.model.page.PageResponse
+import org.kote.client.notion.model.page.response.PageResponse
 
 class PaginatedListSpec extends AnyFlatSpec with Matchers {
   it should "parse user paginated list" in {

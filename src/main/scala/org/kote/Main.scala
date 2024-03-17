@@ -17,7 +17,11 @@ import org.kote.domain.comment.Comment.CommentId
 import org.kote.domain.task.Task
 import org.kote.domain.task.Task.TaskId
 import org.kote.repository._
-import org.kote.repository.postgresql.integration.notion.{NotionDatabaseIntegrationRepositoryPostgresql, NotionMainPageIntegrationRepositoryPostgresql, NotionUserIntegrationRepositoryPostgresql}
+import org.kote.repository.postgresql.integration.notion.{
+  NotionDatabaseIntegrationRepositoryPostgresql,
+  NotionMainPageIntegrationRepositoryPostgresql,
+  NotionUserIntegrationRepositoryPostgresql,
+}
 import org.kote.service._
 import pureconfig.ConfigSource
 import pureconfig.generic.auto._

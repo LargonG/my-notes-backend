@@ -15,7 +15,7 @@ class InMemoryGroupRepository[F[_]: Monad](cache: Cache[F, GroupId, Group])
   override def create(group: Group): F[Long] = cache.add(group.id, group).as(1L)
 
   override def list(boardId: BoardId): OptionT[F, List[Group]] =
-    OptionT.liftF(cache.values.map(_.filter(_.parent == boardId)))
+    OptionT.liftF(cache.values.map(_.filter(_.boardId == boardId)))
 
   override def get(id: GroupId): OptionT[F, Group] = OptionT(cache.get(id))
 

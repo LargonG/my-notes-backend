@@ -9,6 +9,7 @@ import cats.syntax.functor._
 import org.kote.client.notion.{NotionDatabaseClient, NotionDatabaseId, NotionPageId, NotionUserId}
 import org.kote.domain.board.Board.BoardId
 import org.kote.domain.board.{Board, BoardResponse, CreateBoard}
+import org.kote.domain.group.GroupResponse
 import org.kote.domain.user.User.UserId
 import org.kote.repository.{BoardRepository, GroupRepository, IntegrationRepository, TaskRepository}
 import org.kote.service.notion.v1.NotionBoardService
@@ -19,6 +20,8 @@ trait BoardService[F[_]] {
   ): OptionT[F, BoardResponse]
 
   def list(user: UserId): F[List[BoardResponse]]
+
+  def listGroups(id: BoardId): OptionT[F, List[GroupResponse]]
 
   def get(id: BoardId): OptionT[F, BoardResponse]
 
@@ -75,6 +78,9 @@ class RepositoryBoardService[F[_]: UUIDGen: Monad](
   override def get(id: BoardId): OptionT[F, BoardResponse] =
     boardRepository.get(id).map(_.toResponse)
 
+  override def listGroups(id: BoardId): OptionT[F, List[GroupResponse]] =
+    groupRepository.list(id).map(_.map(_.toResponse))
+
   override def delete(id: BoardId): OptionT[F, BoardResponse] =
     for {
       deleted <- boardRepository.delete(id)
@@ -89,4 +95,5 @@ class RepositoryBoardService[F[_]: UUIDGen: Monad](
 
   override def exportToIntegration(id: BoardId): F[Option[BoardResponse]] =
     boardRepository.get(id).map(_.toResponse).value
+
 }

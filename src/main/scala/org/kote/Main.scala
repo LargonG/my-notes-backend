@@ -14,16 +14,10 @@ import org.kote.database.FlywayMigration
 import org.kote.database.transactor.makeTransactor
 import org.kote.domain.comment.Comment
 import org.kote.domain.comment.Comment.CommentId
-import org.kote.domain.group.Group
-import org.kote.domain.group.Group.GroupId
 import org.kote.domain.task.Task
 import org.kote.domain.task.Task.TaskId
 import org.kote.repository._
-import org.kote.repository.postgresql.integration.notion.{
-  NotionDatabaseIntegrationRepositoryPostgresql,
-  NotionMainPageIntegrationRepositoryPostgresql,
-  NotionUserIntegrationRepositoryPostgresql,
-}
+import org.kote.repository.postgresql.integration.notion.{NotionDatabaseIntegrationRepositoryPostgresql, NotionMainPageIntegrationRepositoryPostgresql, NotionUserIntegrationRepositoryPostgresql}
 import org.kote.service._
 import pureconfig.ConfigSource
 import pureconfig.generic.auto._
@@ -41,7 +35,6 @@ object Main extends IOApp.Simple {
         for {
           _ <- FlywayMigration.migrate[IO](config.database)
           taskCache <- Cache.ram[IO, TaskId, Task]
-          groupCache <- Cache.ram[IO, GroupId, Group]
           commentCache <- Cache.ram[IO, CommentId, Comment]
 
           endpoints <- IO.delay {
@@ -61,7 +54,7 @@ object Main extends IOApp.Simple {
 
             val userRepo = UserRepository.postgres[IO]
             val taskRepo = TaskRepository.inMemory(taskCache)
-            val groupRepo = GroupRepository.inMemory(groupCache)
+            val groupRepo = GroupRepository.postgres[IO]
             val boardRepo = BoardRepository.postgres[IO]
             val commentRepo = CommentRepository.inMemory(commentCache)
 

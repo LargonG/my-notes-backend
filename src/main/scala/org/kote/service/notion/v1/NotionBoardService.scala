@@ -10,6 +10,7 @@ import org.kote.client.notion.model.database.request.{DatabaseSearchRequest, Dat
 import org.kote.client.notion.model.text.RichText
 import org.kote.domain.board.Board.BoardId
 import org.kote.domain.board.{Board, BoardResponse, CreateBoard}
+import org.kote.domain.group.GroupResponse
 import org.kote.domain.user.User
 import org.kote.domain.user.User.UserId
 import org.kote.repository.{BoardRepository, GroupRepository, IntegrationRepository, TaskRepository}
@@ -49,6 +50,9 @@ class NotionBoardService[F[_]: Monad: UUIDGen](
     for {
       board <- boardRepository.get(id)
     } yield board.toResponse
+
+  override def listGroups(id: BoardId): OptionT[F, List[GroupResponse]] =
+    groupRepository.list(id).map(_.map(_.toResponse))
 
   override def delete(id: Board.BoardId): OptionT[F, BoardResponse] =
     for {
@@ -112,4 +116,5 @@ class NotionBoardService[F[_]: Monad: UUIDGen](
             response <- notionDatabaseClient.get(databaseId)
           } yield response
     } yield board.toResponse).value
+
 }

@@ -10,7 +10,7 @@ import java.util.UUID
 
 final case class Group(
     id: GroupId,
-    parent: BoardId,
+    boardId: BoardId,
     title: String,
 ) {
   def toResponse: GroupResponse =
@@ -27,5 +27,5 @@ object Group {
   }
 
   def fromCreateGroup(uuid: UUID, createGroup: CreateGroup): Group =
-    Group(GroupId(uuid), createGroup.parent, createGroup.title)
+    Group(GroupId(uuid), createGroup.boardId, createGroup.title)
 }

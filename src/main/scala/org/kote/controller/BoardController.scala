@@ -3,6 +3,7 @@ package org.kote.controller
 import org.kote.common.controller.Controller
 import org.kote.domain.board.Board.BoardId
 import org.kote.domain.board.{BoardResponse, CreateBoard}
+import org.kote.domain.group.GroupResponse
 import org.kote.domain.user.User.UserId
 import org.kote.service.BoardService
 import sttp.tapir._
@@ -35,6 +36,13 @@ class BoardController[F[_]](boardService: BoardService[F]) extends Controller[F]
       .out(jsonBody[Option[BoardResponse]])
       .serverLogicSuccess(boardService.get(_).value)
 
+  private val getBoardGroups: ServerEndpoint[Any, F] =
+    endpoint.get
+      .summary("Получить колонки доски")
+      .in(pathWithBoardId / "groups")
+      .out(jsonBody[Option[List[GroupResponse]]])
+      .serverLogicSuccess(boardService.listGroups(_).value)
+
   private val deleteBoard: ServerEndpoint[Any, F] =
     endpoint.delete
       .summary("Удалить доску")
@@ -57,7 +65,15 @@ class BoardController[F[_]](boardService: BoardService[F]) extends Controller[F]
       .serverLogicSuccess(boardService.exportToIntegration)
 
   override def endpoints: List[ServerEndpoint[Any, F]] =
-    List(createBoard, listBoardsByOwner, getBoard, deleteBoard, importBoard, exportBoard).map(
+    List(
+      createBoard,
+      listBoardsByOwner,
+      getBoard,
+      getBoardGroups,
+      deleteBoard,
+      importBoard,
+      exportBoard,
+    ).map(
       _.withTag("Board"),
     )
 }

@@ -22,7 +22,7 @@ class GroupController[F[_]](groupService: GroupService[F]) extends Controller[F]
       .out(jsonBody[Option[GroupResponse]])
       .serverLogicSuccess(groupService.create(_).value)
 
-  private val listGroup: ServerEndpoint[Any, F] =
+  private val getGroup: ServerEndpoint[Any, F] =
     endpoint.get
       .summary("Получить колонку")
       .in(pathWithGroupId)
@@ -50,7 +50,7 @@ class GroupController[F[_]](groupService: GroupService[F]) extends Controller[F]
       .serverLogicSuccess(groupService.delete(_).value)
 
   override def endpoints: List[ServerEndpoint[Any, F]] =
-    List(createGroup, listGroup, moveTask, deleteGroup).map(_.withTag("Group"))
+    List(createGroup, getGroup, moveTask, deleteGroup).map(_.withTag("Group"))
 }
 
 object GroupController {

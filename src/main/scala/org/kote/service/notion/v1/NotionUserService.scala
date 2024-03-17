@@ -74,6 +74,7 @@ class NotionUserService[F[_]: UUIDGen: MonadThrow: Clock](
           notionUser <- notionUserClient.get(notionUserId)
         } yield notionUser).value)
       // Но даже если в предыдущем шаге что-то пошло не так, это мы должны удалить 100%
+      // Если там ничего нет, ну и ладно
       _ <- OptionT.liftF(userToNotionUserIntegration.delete(id).value)
       _ <- OptionT.liftF(userMainPageIntegration.delete(id).value)
     } yield deleted.toUnsafeResponse(notionUser)
@@ -107,7 +108,17 @@ class NotionUserService[F[_]: UUIDGen: MonadThrow: Clock](
                   )
                   .flatMap(_.headOption),
               )
-              _ <- OptionT.liftF(userToNotionUserIntegration.set(id, notionUser.id))
+
+              // Смотрим, нет ли этого пользователя где-то ещё
+              otherUserNotContains <- OptionT.liftF(
+                userToNotionUserIntegration.getByValue(notionUser.id).isEmpty,
+              )
+
+              // Если есть - говорим, что запрос неудачный
+              _ <-
+                if (otherUserNotContains)
+                  OptionT.liftF(userToNotionUserIntegration.set(id, notionUser.id))
+                else OptionT.none
             } yield notionUser
           else
             for {

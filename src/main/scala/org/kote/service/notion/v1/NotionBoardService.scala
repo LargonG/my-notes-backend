@@ -6,7 +6,8 @@ import cats.effect.std.UUIDGen
 import cats.implicits.{toFlatMapOps, toTraverseOps}
 import cats.syntax.functor._
 import org.kote.client.notion._
-import org.kote.client.notion.model.database.request.DatabaseSearchRequest
+import org.kote.client.notion.model.database.request.{DatabaseSearchRequest, DatabaseUpdateRequest}
+import org.kote.client.notion.model.text.RichText
 import org.kote.domain.board.Board.BoardId
 import org.kote.domain.board.{Board, BoardResponse, CreateBoard}
 import org.kote.domain.user.User
@@ -62,8 +63,8 @@ class NotionBoardService[F[_]: Monad: UUIDGen](
   override def importFromIntegration(userId: UserId): F[Option[List[BoardResponse]]] =
     (for {
       notionUser <- userToUserIntegration.getByKey(userId)
-      lists <- notionDatabaseClient.search(DatabaseSearchRequest(None, None))
-      madeByNotionUser = lists.filter(_.createdBy.id == notionUser)
+      databases <- notionDatabaseClient.search(DatabaseSearchRequest(None, None))
+      madeByNotionUser = databases.filter(_.createdBy.id == notionUser)
       results <- madeByNotionUser.traverse(database =>
         for {
           isEmpty <- OptionT.liftF(databaseIntegration.getByValue(database.id).isEmpty)
@@ -98,6 +99,16 @@ class NotionBoardService[F[_]: Monad: UUIDGen](
         } else
           for {
             databaseId <- databaseIntegration.getByKey(id)
+            _ <- notionDatabaseClient.update(
+              databaseId,
+              /*
+              todo:
+                если захотим добавить group service, то тут мы должны попробовать создать
+                property для групп, если оно ещё не было создано, но так как у нас пока не предусмотрена
+                работа notion с group, то этого нет
+               */
+              DatabaseUpdateRequest(Some(List(RichText.text(board.title))), Map.empty),
+            )
             response <- notionDatabaseClient.get(databaseId)
           } yield response
     } yield board.toResponse).value

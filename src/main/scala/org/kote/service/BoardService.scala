@@ -23,6 +23,10 @@ trait BoardService[F[_]] {
   def get(id: BoardId): OptionT[F, BoardResponse]
 
   def delete(id: BoardId): OptionT[F, BoardResponse]
+
+  def importFromIntegration(userId: UserId): F[Option[List[BoardResponse]]]
+
+  def exportToIntegration(id: BoardId): F[Option[BoardResponse]]
 }
 
 object BoardService {
@@ -79,4 +83,10 @@ class RepositoryBoardService[F[_]: UUIDGen: Monad](
       tasks <- taskRepository.listByBoard(id)
       _ <- tasks.traverse(task => taskRepository.delete(task.id))
     } yield deleted.toResponse
+
+  override def importFromIntegration(userId: UserId): F[Option[List[BoardResponse]]] =
+    boardRepository.list(userId).map(_.map(_.toResponse)).value
+
+  override def exportToIntegration(id: BoardId): F[Option[BoardResponse]] =
+    boardRepository.get(id).map(_.toResponse).value
 }

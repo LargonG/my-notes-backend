@@ -14,6 +14,8 @@ import org.kote.domain.user.User.UserId
 import org.kote.repository.{BoardRepository, GroupRepository, IntegrationRepository, TaskRepository}
 import org.kote.service.BoardService
 
+import scala.annotation.unused
+
 class NotionBoardService[F[_]: Monad: UUIDGen](
     // repositories
     boardRepository: BoardRepository[F],
@@ -24,54 +26,28 @@ class NotionBoardService[F[_]: Monad: UUIDGen](
     // integrations
     databaseIntegration: IntegrationRepository[F, BoardId, NotionDatabaseId],
     userMainPageIntegration: IntegrationRepository[F, UserId, NotionPageId],
+    @unused
     userToUserIntegration: IntegrationRepository[F, UserId, NotionUserId],
 ) extends BoardService[F] {
 
   override def create(createBoard: CreateBoard): OptionT[F, BoardResponse] =
-    OptionT(
-      (for {
+    OptionT.liftF(
+      for {
         uuid <- UUIDGen[F].randomUUID
         board = Board.fromCreateBoard(uuid, createBoard)
         _ <- boardRepository.create(board)
-        result <- (for {
-          mainPage <- userMainPageIntegration.getByKey(createBoard.createdBy)
-          response <- notionDatabaseClient.create(
-            CreateBoard.toNotionRequest(createBoard, mainPage),
-          )
-          _ <- OptionT.liftF(databaseIntegration.set(board.id, response.id))
-        } yield response).value
-      } yield BoardResponse
-        .fromNotionResponse(result)(
-          databaseIntegration,
-          userToUserIntegration,
-        )
-        .value).flatten,
+      } yield board.toResponse,
     )
 
   override def list(user: User.UserId): F[List[BoardResponse]] =
     (for {
-      notionUserId <- userToUserIntegration.getByKey(user)
-      databases <- notionDatabaseClient.search(DbSearchRequest(None, None))
-      filtered <- OptionT.pure[F](
-        databases.filter(response => response.createdBy.id == notionUserId),
-      )
-      mapped <- filtered.traverse(elem =>
-        BoardResponse.fromNotionResponse(Some(elem))(
-          databaseIntegration,
-          userToUserIntegration,
-        ),
-      )
-    } yield mapped).getOrElse(List.empty)
+      board <- boardRepository.list(user)
+    } yield board.map(_.toResponse)).getOrElse(List.empty)
 
   override def get(id: Board.BoardId): OptionT[F, BoardResponse] =
     for {
-      databaseId <- databaseIntegration.getByKey(id)
-      database <- notionDatabaseClient.get(databaseId)
-      res <- BoardResponse.fromNotionResponse(Some(database))(
-        databaseIntegration,
-        userToUserIntegration,
-      )
-    } yield res
+      board <- boardRepository.get(id)
+    } yield board.toResponse
 
   override def delete(id: Board.BoardId): OptionT[F, BoardResponse] =
     for {
@@ -82,4 +58,47 @@ class NotionBoardService[F[_]: Monad: UUIDGen](
       _ <- tasks.traverse(task => taskRepository.delete(task.id))
       _ <- databaseIntegration.delete(deleted.id)
     } yield deleted.toResponse
+
+  override def importFromIntegration(userId: UserId): F[Option[List[BoardResponse]]] =
+    (for {
+      notionUser <- userToUserIntegration.getByKey(userId)
+      lists <- notionDatabaseClient.search(DbSearchRequest(None, None))
+      madeByNotionUser = lists.filter(_.createdBy.id == notionUser)
+      results <- madeByNotionUser.traverse(database =>
+        for {
+          isEmpty <- OptionT.liftF(databaseIntegration.getByValue(database.id).isEmpty)
+          board <-
+            if (isEmpty)
+              for {
+                board <- create(CreateBoard(database.title.mkString, userId))
+                _ <- OptionT.liftF(databaseIntegration.set(board.id, database.id))
+              } yield board
+            else
+              for {
+                boardId <- databaseIntegration.getByValue(database.id)
+                board <- boardRepository.get(boardId)
+              } yield board.toResponse
+        } yield board,
+      )
+    } yield results).value
+
+  override def exportToIntegration(id: BoardId): F[Option[BoardResponse]] =
+    (for {
+      board <- boardRepository.get(id)
+      mainPage <- userMainPageIntegration.getByKey(board.owner)
+      isEmpty <- OptionT.liftF(databaseIntegration.getByKey(id).isEmpty)
+      _ <-
+        if (isEmpty) {
+          for {
+            response <- notionDatabaseClient.create(
+              CreateBoard.toNotionRequest(CreateBoard(board.title, board.owner), mainPage),
+            )
+            _ <- OptionT.liftF(databaseIntegration.set(board.id, response.id))
+          } yield response
+        } else
+          for {
+            databaseId <- databaseIntegration.getByKey(id)
+            response <- notionDatabaseClient.get(databaseId)
+          } yield response
+    } yield board.toResponse).value
 }

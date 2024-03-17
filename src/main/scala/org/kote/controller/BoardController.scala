@@ -42,8 +42,24 @@ class BoardController[F[_]](boardService: BoardService[F]) extends Controller[F]
       .out(jsonBody[Option[BoardResponse]])
       .serverLogicSuccess(boardService.delete(_).value)
 
+  private val importBoard: ServerEndpoint[Any, F] =
+    endpoint.post
+      .summary("Импортировать таблицы пользователя из сторонних сервисов")
+      .in(standardPath / "import" / query[UserId]("user_id"))
+      .out(jsonBody[Option[List[BoardResponse]]])
+      .serverLogicSuccess(boardService.importFromIntegration)
+
+  private val exportBoard: ServerEndpoint[Any, F] =
+    endpoint.post
+      .summary("Экспортировать таблицу в сторонние сервисы")
+      .in(pathWithBoardId / "export")
+      .out(jsonBody[Option[BoardResponse]])
+      .serverLogicSuccess(boardService.exportToIntegration)
+
   override def endpoints: List[ServerEndpoint[Any, F]] =
-    List(createBoard, listBoardsByOwner, getBoard, deleteBoard).map(_.withTag("Board"))
+    List(createBoard, listBoardsByOwner, getBoard, deleteBoard, importBoard, exportBoard).map(
+      _.withTag("Board"),
+    )
 }
 
 object BoardController {

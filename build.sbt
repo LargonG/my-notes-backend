@@ -17,6 +17,10 @@ val flywayVersion = "9.16.0"
 val quillVersion = "4.6.0"
 val doobieVersion = "1.0.0-RC2"
 
+val testcontainersScalatestVersion = "0.40.12"
+val testcontainersPostgresqlVersion = "0.40.12"
+val ceTestingVersion = "1.5.0"
+
 lazy val root = (project in file("."))
   .settings(
     name := "my-notes",
@@ -77,6 +81,11 @@ lazy val root = (project in file("."))
       "org.typelevel" %% "cats-effect-testing-scalatest" % testVersion % Test,
       "org.scalatestplus" %% "mockito-4-11" % mockitoVersion % Test,
 
+      // integration test
+      "org.typelevel" %% "cats-effect-testing-scalatest" % ceTestingVersion % IntegrationTest,
+      "com.dimafeng" %% "testcontainers-scala-scalatest" % testcontainersScalatestVersion % IntegrationTest,
+      "com.dimafeng" %% "testcontainers-scala-postgresql" % testcontainersPostgresqlVersion % IntegrationTest,
+
       // Ungrouped
       "com.github.cb372" %% "cats-retry" % catsRetryVersion,
       "org.typelevel" %% "log4cats-core" % catsLoggingVersion,
@@ -93,6 +102,14 @@ lazy val root = (project in file("."))
     ),
   )
   .enablePlugins(JavaAppPackaging)
+  .configs(IntegrationTest)
+  .settings(
+    Defaults.itSettings,
+    IntegrationTest / fork := true,
+  )
+  .settings(
+    Compile / run / fork := true,
+  )
 
 val tethysVersion = "0.26.0"
 val circeVersion = "0.14.1"

@@ -1,0 +1,19 @@
+# idea
+.idea/
+.run/
+
+# visual studio code
+.vscode/
+
+# sbt
+.bsp/
+target/
+project/target
+
+# custom
+files/
+
+todo.*
+
+# secrects
+secrets/

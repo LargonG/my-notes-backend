@@ -1,0 +1,27 @@
+image: sbtscala/scala-sbt:openjdk-18.0.2.1_1.8.1_2.13.10
+#image: docker-hosted.artifactory.tcsbank.ru/jvm-core/java-base-17-jdk-focal-sbt-scala:latest
+
+stages:
+  - build
+  - test
+  - publish
+
+
+build:
+  stage: build
+  script:
+    - sbt scalafmtSbtCheck scalafmtCheckAll compile
+
+test:
+  stage: test
+  script:
+    - sbt test
+
+publish:
+  stage: publish
+  script:
+    - sbt universal:packageBin
+  artifacts:
+    paths:
+      - target/universal/*.zip
+
